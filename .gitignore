@@ -4,4 +4,4 @@ venv
 __pycache__
 *.py[com]
 .env
-*.txt
+/i_need_file.txt
