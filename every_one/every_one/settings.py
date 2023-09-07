@@ -118,8 +118,7 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# настройки для бота
-TOKEN = TOKEN_BOT
+
 
 
 
