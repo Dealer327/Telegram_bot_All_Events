@@ -1,22 +1,22 @@
+import asyncio
+
 from aiogram import Bot, Dispatcher, types, F
-from aiogram.filters import Command
-from aiogram.types import Message, ContentType
-
-from every_one.settings import TOKEN
-
-API_TOKEN: str = TOKEN
-
-bot = Bot(token=API_TOKEN)
-dp = Dispatcher()
+from config_data.config import Config, load_config
 
 
-@dp.message(Command(commands=['start']))
-async def process_start_command(message: Message):
-    await message.answer('Тест запущен', print(message.chat.username))
+# Функция конфигурирования и запуск бота
+async def main() -> None:
+    config: Config = load_config()
+
+    bot: Bot = Bot(token=config.tg_bot.token)
+    dp: Dispatcher = Dispatcher()
+
+    # Пропускаем накопившиеся апдейты и запускаем polling
+    await bot.delete_webhook(drop_pending_updates=True)
+    await dp.start_polling(bot)
+
+if __name__ == '__main__':
+    asyncio.run(main())
 
 
 
-
-
-
-dp.run_polling(bot)
