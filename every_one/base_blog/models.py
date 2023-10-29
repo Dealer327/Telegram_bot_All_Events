@@ -1,4 +1,7 @@
+from datetime import datetime
+
 from django.db import models
+from django.utils import timezone
 
 
 # Create your models here.
@@ -11,6 +14,12 @@ class Profile(models.Model):
     name = models.TextField(
         verbose_name='Имя пользователя',
     )
+    time_create = models.DateTimeField(default=datetime.now(),
+                                       verbose_name='Дата регистрации'
+                                       )
+    time_update = models.DateTimeField(default=datetime.now())
+
+    choice_month = models.IntegerField(default=True)
 
     def __str__(self):
         return f'#{self.external_id} {self.name}'

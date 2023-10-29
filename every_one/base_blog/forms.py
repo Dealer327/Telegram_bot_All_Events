@@ -9,9 +9,13 @@ class ProfileForm(forms.ModelForm):
         fields = (
             'external_id',
             'name',
+
         )
         widgets = {
             'name': forms.TextInput,
+            'time_create': forms.DateField,
+            'time_update': forms.DateField
+
         }
 
 

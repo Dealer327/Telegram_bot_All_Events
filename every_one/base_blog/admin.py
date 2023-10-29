@@ -7,5 +7,5 @@ from .forms import ProfileForm
 
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
-    list_display = ('id', 'external_id', 'name')
+    list_display = ('id', 'external_id', 'name', 'time_create', 'time_update', 'choice_month')
     form = ProfileForm

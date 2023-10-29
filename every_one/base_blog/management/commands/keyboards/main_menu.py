@@ -1,8 +1,8 @@
 from aiogram import Bot
-from aiogram.types import BotCommand
-from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+from aiogram.types import BotCommand, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
-from commands.lexicon.lexicon_ru import Lexicon_ru, LEXICON_COMMANDS
+
+from ..lexicon.lexicon_ru import LEXICON_COMMANDS, Lexicon_ru
 
 
 async def set_main_menu(bot: Bot):
