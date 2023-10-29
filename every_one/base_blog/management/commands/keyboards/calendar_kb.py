@@ -1,15 +1,7 @@
-from calendar import monthrange
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery
 from aiogram.utils.keyboard import InlineKeyboardBuilder
-from datetime import datetime
 
-from ..lexicon.lexicon_ru import Lexicon_ru, Lexicon_month, create_now_days
-
-
-# def create_days(month: int, year: int):
-#     days = monthrange(year, month)[1]
-#     lexicon_days: list[str] = [str(i) for i in range(1, days + 1)]
-#     return lexicon_days
+from ..lexicon.lexicon_ru import Lexicon_month
 
 
 def create_calendar(width, list_days, *args, last_btn: str | None = None):
