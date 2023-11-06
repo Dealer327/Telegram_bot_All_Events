@@ -1,17 +1,14 @@
 from aiogram.types import Message, KeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove, CallbackQuery
-from datetime import date, datetime
-import asyncio
+from dateutil.relativedelta import relativedelta
+
 from aiogram.filters import Command, CommandStart
 from aiogram import Router, F
-from aiogram.utils.keyboard import ReplyKeyboardBuilder
-from asgiref.sync import sync_to_async, async_to_sync
 
-from services.file_handling import create_day, sorting_сalendar
+from ..services.file_handling import create_day, sorting_сalendar
 from ....models import *
 from ..keyboards.main_menu import create_inline_kb
 from ..keyboards.calendar_kb import create_calendar
 from ..lexicon.lexicon_ru import Lexicon_ru, Lexicon_month
-
 
 # Инициализируем роутер уровня модуля
 router: Router = Router()
@@ -40,12 +37,17 @@ async def process_start_command(message: Message):
     )
 
 
+@router.callback_query(F.date == 'new_event')
+async def create_new_event(callback: CallbackQuery):
+    pass
+
+
 @router.callback_query(F.data == 'calendar')
 async def process_open_calendar(callback: CallbackQuery):
     p = await Profile.objects.aget(external_id=callback.from_user.id)
     p.time_update: datetime = datetime.now()
     await p.asave(update_fields=['time_update'])
-    p.choice_month = p.time_update.month
+    p.choice_month = p.time_update
     await p.asave(update_fields=['choice_month'])
     name_month = callback.message.date.month
     list_months = create_day(callback.message.date.year)
@@ -65,22 +67,16 @@ async def process_open_calendar(callback: CallbackQuery):
 @router.callback_query(F.data == 'forward_c')
 async def process_next_month(callback: CallbackQuery):
     m = await Profile.objects.aget(external_id=callback.from_user.id)
-    next_month = m.choice_month
-    if next_month == 12:
-        m.choice_month = 1
-        await m.asave(update_fields=['choice_month'])
-    elif next_month < 12:
-        m.choice_month += 1
-        await m.asave(update_fields=['choice_month'])
+    m.choice_month = m.choice_month + relativedelta(months=+1)
+    await m.asave(update_fields=['choice_month'])
     list_months = create_day(callback.message.date.year)
-    days_in_month = sorting_сalendar(list_months, m.choice_month)
-
+    days_in_month = sorting_сalendar(list_months, m.choice_month.month)
     await callback.message.edit_text(
         text=f'Календарь событий',
         reply_markup=create_calendar(3,
                                      days_in_month,
                                      'backward_c',
-                                     f'{Lexicon_month[m.choice_month]}',
+                                     f'{Lexicon_month[m.choice_month.month]}',
                                      'forward_c',
                                      last_btn='Главное меню')
     )
@@ -90,22 +86,16 @@ async def process_next_month(callback: CallbackQuery):
 @router.callback_query(F.data == 'backward_c')
 async def process_previous_month(callback: CallbackQuery):
     m = await Profile.objects.aget(external_id=callback.from_user.id)
-    next_month = m.choice_month
-    if next_month == 1:
-        m.choice_month = 12
-        await m.asave(update_fields=['choice_month'])
-    elif next_month <= 12:
-        m.choice_month -= 1
-        await m.asave(update_fields=['choice_month'])
+    m.choice_month = m.choice_month + relativedelta(months=-1)
+    await m.asave(update_fields=['choice_month'])
     list_months = create_day(callback.message.date.year)
-    days_in_month = sorting_сalendar(list_months, m.choice_month)
-
+    days_in_month = sorting_сalendar(list_months, m.choice_month.month)
     await callback.message.edit_text(
         text=f'Календарь событий',
         reply_markup=create_calendar(3,
                                      days_in_month,
                                      'backward_c',
-                                     f'{Lexicon_month[m.choice_month]}',
+                                     f'{Lexicon_month[m.choice_month.month]}',
                                      'forward_c',
                                      last_btn='Главное меню')
     )
