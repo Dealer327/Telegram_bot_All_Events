@@ -20,7 +20,7 @@ class Profile(models.Model):
                                        )
     time_update = models.DateTimeField(default=datetime.now())
 
-    choice_month = models.DateTimeField()
+    choice_month = models.DateTimeField(null=True)
 
     def __str__(self):
         return f'#{self.external_id} {self.name}'
@@ -31,7 +31,6 @@ class Profile(models.Model):
 
 
 class Event(models.Model):
-    external_id = models.PositiveIntegerField(verbose_name='ID пользователя')
     name_event = models.CharField(max_length=30,
                                   verbose_name='Эвент'
                                   )
@@ -40,12 +39,15 @@ class Event(models.Model):
                                   default=True
                                   )
 
-    start_time = models.DateTimeField()
     user_create = models.ForeignKey(Profile,
                                     on_delete=models.CASCADE,
                                     null=True
                                     )
+    start_time = models.CharField(max_length=10,
+                                  verbose_name='Время начала',
+                                  null=True)
     create_time = models.DateTimeField(default=timezone.now)
+
     class Meta:
         verbose_name = 'Эвент'
         verbose_name_plural = 'Эвенты'

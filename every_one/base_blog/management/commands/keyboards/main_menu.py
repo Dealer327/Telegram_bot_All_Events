@@ -13,7 +13,7 @@ async def set_main_menu(bot: Bot):
     await bot.set_my_commands(main_menu_commands)
 
 
-def create_inline_kb(width: int, *args: str, ) -> InlineKeyboardMarkup:
+def create_inline_kb(width: int, *args: str, last_btn: str | None = None) -> InlineKeyboardMarkup:
     # Инициализируем билдер
     kb_builder = InlineKeyboardBuilder()
     # Инициализируем список для кнопок
@@ -27,6 +27,11 @@ def create_inline_kb(width: int, *args: str, ) -> InlineKeyboardMarkup:
                 callback_data=button))
     # Распаковываем список с кнопками в билдер методом row c параметром width
     kb_builder.row(*buttons, width=width)
+    if last_btn:
+        kb_builder.row(InlineKeyboardButton(
+            text=last_btn,
+            callback_data='last_btn'
+        ))
 
     # Возвращаем объект инлайн-клавиатуры
     return kb_builder.as_markup()

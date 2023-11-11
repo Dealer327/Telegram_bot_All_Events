@@ -1,12 +1,37 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from ..lexicon.lexicon_ru import Lexicon_month
+from ..lexicon.lexicon_ru import Lexicon_month, Lexicon_form_new_event
+
+
+def create_kb_yes_or_no(width, *args):
+    kb_yes_no = InlineKeyboardBuilder()
+    buttons = []
+    if args:
+        for button in args:
+            buttons.append(InlineKeyboardButton(
+                text=Lexicon_form_new_event[button] if button in Lexicon_form_new_event else button,
+                callback_data=button
+            ))
+    kb_yes_no.row(*buttons, width=width)
+    return kb_yes_no.as_markup()
+
+
+def create_kb_finish_add_event(width, *args):
+    kb_yes_no = InlineKeyboardBuilder()
+    buttons = []
+    if args:
+        for button in args:
+            buttons.append(InlineKeyboardButton(
+                text=Lexicon_form_new_event[button] if button in Lexicon_form_new_event else button,
+                callback_data=button
+            ))
+    kb_yes_no.row(*buttons, width=width)
+    return kb_yes_no.as_markup()
 
 
 def create_calendar(width, list_days, *args, last_btn: str | None = None):
     kb_calendar = InlineKeyboardBuilder()
-
     buttons = []
     buttons_days = []
     if args:

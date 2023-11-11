@@ -14,4 +14,4 @@ class ProfileAdmin(admin.ModelAdmin):
 
 @admin.register(Event)
 class EventAdmin(admin.ModelAdmin):
-    list_display = ('id', 'external_id', 'name_event', 'info_event', 'start_time', 'user_create', 'create_time')
+    list_display = ('id', 'name_event', 'info_event', 'user_create', 'start_time', 'create_time')
