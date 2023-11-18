@@ -43,9 +43,9 @@ class Event(models.Model):
                                     on_delete=models.CASCADE,
                                     null=True
                                     )
-    start_time = models.CharField(max_length=10,
-                                  verbose_name='Время начала',
-                                  null=True)
+    start_time = models.DateTimeField(
+        verbose_name='Время начала',
+        null=True)
     create_time = models.DateTimeField(default=timezone.now)
 
     class Meta:

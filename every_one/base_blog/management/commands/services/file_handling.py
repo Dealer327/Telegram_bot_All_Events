@@ -1,20 +1,18 @@
 from calendar import monthrange
+from datetime import datetime
+
+from ..keyboards.main_menu import create_inline_kb
+from ....models import *
 
 
-def create_day(year):
-    ready_days_in_month = [[]]
-    list_days = []
-    month = 1
-
-    for i in range(12):
-        days = monthrange(year, month)[1]
-        for j in range(1, days + 1):
-            list_days.append(str(j))
-        ready_days_in_month.append(list_days)
-        list_days = []
-        month += 1
+def create_day(year: datetime.year, month: datetime.month):
+    ready_days_in_month = []
+    days = monthrange(year, month)[1]
+    for i in range(1, days + 1):
+        ready_days_in_month.append(str(i))
     return ready_days_in_month
 
 
-def sorting_сalendar(months: create_day, number_month: int):
-    return months[number_month]
+def create_button_main_menu():
+    keyboard_menu = create_inline_kb(1, last_btn='Главное меню')
+    return keyboard_menu

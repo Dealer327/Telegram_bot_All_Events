@@ -1,7 +1,9 @@
+from datetime import datetime
+
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from ..lexicon.lexicon_ru import Lexicon_month, Lexicon_form_new_event
+from ..lexicon.lexicon_ru import Lexicon_month, Lexicon_form_new_event, Lexicon_day_with_event
 
 
 def create_kb_yes_or_no(width, *args):
@@ -30,7 +32,7 @@ def create_kb_finish_add_event(width, *args):
     return kb_yes_no.as_markup()
 
 
-def create_calendar(width, list_days, *args, last_btn: str | None = None):
+def create_calendar(width, events, list_days, *args, last_btn: str | None = None):
     kb_calendar = InlineKeyboardBuilder()
     buttons = []
     buttons_days = []
@@ -41,10 +43,16 @@ def create_calendar(width, list_days, *args, last_btn: str | None = None):
                 callback_data=button
             ))
     for button_d in list_days:
-        buttons_days.append(InlineKeyboardButton(
-            text=button_d if button_d in list_days else button_d,
-            callback_data=button_d
-        ))
+        if button_d in events:
+            buttons_days.append(InlineKeyboardButton(
+                text=f'{button_d}({events.count(button_d)})',
+                callback_data=button_d
+            ))
+        else:
+            buttons_days.append(InlineKeyboardButton(
+                text=f'{button_d}',
+                callback_data=button_d
+            ))
     kb_calendar.row(*buttons, width=width).add(*buttons_days).adjust(3, 4)
     if last_btn:
         kb_calendar.row(InlineKeyboardButton(
@@ -52,3 +60,21 @@ def create_calendar(width, list_days, *args, last_btn: str | None = None):
             callback_data='last_btn'
         ))
     return kb_calendar.as_markup()
+
+
+def create_list_events(width, events, *args, last_btn):
+    kb_event_day = InlineKeyboardBuilder()
+    buttons = []
+    for button in events:
+        buttons.append(InlineKeyboardButton(
+            text=f'{button.start_time.hour}:{button.start_time.minute} - {button.name_event}\
+                   {button.info_event}',
+            callback_data=button.name_event
+        ))
+    kb_event_day.row(*buttons, width=width)
+    if last_btn:
+        kb_event_day.row(InlineKeyboardButton(
+            text=last_btn,
+            callback_data='last_btn'
+        ))
+    return kb_event_day.as_markup()
