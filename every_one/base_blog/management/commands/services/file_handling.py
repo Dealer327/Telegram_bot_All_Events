@@ -1,5 +1,4 @@
 from calendar import monthrange
-from datetime import datetime
 
 from ..keyboards.main_menu import create_inline_kb
 from ....models import *

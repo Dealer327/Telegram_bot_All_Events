@@ -1,11 +1,10 @@
 from aiogram.types import Message, CallbackQuery
 from dateutil.relativedelta import relativedelta
 
-from aiogram.filters import CommandStart
+from aiogram.filters import CommandStart, StateFilter
 from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
-from aiogram.fsm.state import State, StatesGroup
-
+from aiogram.fsm.state import State, StatesGroup, default_state
 
 from ..services.file_handling import create_day, create_button_main_menu
 from ....models import *
@@ -36,7 +35,7 @@ async def process_start_command(message: Message):
     )
 
 
-@router.callback_query(F.data == 'new_event')
+@router.callback_query(F.data == 'new_event', StateFilter(default_state))
 async def create_new_event(callback: CallbackQuery, state: FSMContext):
     await state.set_state(Form.start_time)
     await callback.message.edit_text(
@@ -45,7 +44,7 @@ async def create_new_event(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
 
 
-@router.message(Form.start_time)
+@router.message(StateFilter(Form.start_time))
 async def process_input_date(message: Message, state: FSMContext):
     await state.update_data(start_time=message.text)
     try:
@@ -57,10 +56,11 @@ async def process_input_date(message: Message, state: FSMContext):
         )
         await message.delete()
     except ValueError:
-        await message.answer(text=f'{Lexicon_form_new_event["Error_date"]}')
+        await message.answer(text=f'{Lexicon_form_new_event["Error_date"]}',
+                             reply_markup=create_button_main_menu())
 
 
-@router.message(Form.name_even)
+@router.message(StateFilter(Form.name_even))
 async def process_input_name_event(message: Message, state: FSMContext):
     await state.update_data(name_event=message.text)
     await state.set_state(Form.info_event)
@@ -69,7 +69,7 @@ async def process_input_name_event(message: Message, state: FSMContext):
     await message.delete()
 
 
-@router.callback_query(lambda F: F.data == 'Yes' or F.data == 'Yes_date')
+@router.callback_query(lambda f: f.data == 'Yes' or f.data == 'Yes_date')
 async def process_next_form(callback: CallbackQuery, state: FSMContext):
     if callback.data == 'Yes':
         current_state = await state.get_state()
@@ -84,7 +84,7 @@ async def process_next_form(callback: CallbackQuery, state: FSMContext):
         await callback.answer()
 
 
-@router.message(Form.info_event)
+@router.message(StateFilter(Form.info_event))
 async def process_input_info_event(message: Message, state: FSMContext):
     await state.update_data(info_event=message.text)
     data = await state.get_data()
@@ -100,25 +100,31 @@ async def process_input_info_event(message: Message, state: FSMContext):
 @router.callback_query(F.data == 'Reg')
 async def save_info_in_db(callback: CallbackQuery, state: FSMContext):
     p = await Profile.objects.aget(name=callback.from_user.username)
-    data = await state.get_data()
-    event = Event(name_event=data['name_event'],
-                  info_event=data['info_event'],
-                  user_create=p,
-                  start_time=data['start_time'])
-    await event.asave()
-    await state.clear()
-    # ДОДЕЛАТЬ: возможность добавлять одно событие
     keyboard_menu = create_inline_kb(1, 'calendar', 'new_event')
-    await callback.message.edit_text(
-        text=Lexicon_ru['/start'],
-        reply_markup=keyboard_menu
-    )
-    await callback.answer()
+    try:
+        data = await state.get_data()
+        event = Event(name_event=data['name_event'],
+                      info_event=data['info_event'],
+                      user_create=p,
+                      start_time=data['start_time'])
+        await event.asave()
+        await state.clear()
+        # ДОДЕЛАТЬ: возможность добавлять одно событие
+
+        await callback.message.edit_text(
+            text=Lexicon_ru['/start'],
+            reply_markup=keyboard_menu
+        )
+        await callback.answer()
+    except ValueError:
+        await callback.message.edit_text(
+            text=Lexicon_ru['/start'],
+            reply_markup=keyboard_menu
+        )
 
 
 @router.callback_query(F.data == 'calendar')
 async def process_open_calendar(callback: CallbackQuery):
-    print(callback.message.from_user.id)
     p = await datebase.up_date_time_for_user(callback)
     name_month = callback.message.date.month
     list_days = create_day(callback.message.date.year, callback.message.date.month)
@@ -147,7 +153,7 @@ async def process_pres_day(callback: CallbackQuery):
     await callback.answer()
 
 
-@router.callback_query(lambda F: F.data == 'forward_c' or F.data == 'backward_c')
+@router.callback_query(lambda f: f.data == 'forward_c' or f.data == 'backward_c')
 async def process_next_month(callback: CallbackQuery):
     m = await Profile.objects.aget(external_id=callback.from_user.id)
     if callback.data == 'forward_c':
@@ -171,10 +177,9 @@ async def process_next_month(callback: CallbackQuery):
     await callback.answer()
 
 
-@router.callback_query(lambda F: F.data == 'last_btn' or F.data == 'No' or F.data == 'Cen' or F.data == 'No_date')
+@router.callback_query(lambda f: f.data == 'last_btn' or f.data == 'No' or f.data == 'Cen' or f.data == 'No_date')
 async def process_open_menu(callback: CallbackQuery, state: FSMContext):
     await state.clear()
-    chat_id = callback.message.chat.id
     keyboard_menu = create_inline_kb(1, 'calendar', 'new_event')
     await callback.message.edit_text(
         text=Lexicon_ru['/start'],

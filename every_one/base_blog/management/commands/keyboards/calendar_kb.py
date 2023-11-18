@@ -1,9 +1,7 @@
-from datetime import datetime
-
-from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery
+from aiogram.types import InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from ..lexicon.lexicon_ru import Lexicon_month, Lexicon_form_new_event, Lexicon_day_with_event
+from ..lexicon.lexicon_ru import Lexicon_month, Lexicon_form_new_event
 
 
 def create_kb_yes_or_no(width, *args):
@@ -62,13 +60,13 @@ def create_calendar(width, events, list_days, *args, last_btn: str | None = None
     return kb_calendar.as_markup()
 
 
-def create_list_events(width, events, *args, last_btn):
+def create_list_events(width, events, last_btn):
     kb_event_day = InlineKeyboardBuilder()
     buttons = []
+
     for button in events:
         buttons.append(InlineKeyboardButton(
-            text=f'{button.start_time.hour}:{button.start_time.minute} - {button.name_event}\
-                   {button.info_event}',
+            text=f'{button.start_time.strftime("%H:%M")} - {button.name_event}',
             callback_data=button.name_event
         ))
     kb_event_day.row(*buttons, width=width)
