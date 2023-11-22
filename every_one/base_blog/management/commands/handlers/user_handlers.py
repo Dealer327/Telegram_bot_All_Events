@@ -128,7 +128,7 @@ async def process_open_calendar(callback: CallbackQuery):
     p = await datebase.up_date_time_for_user(callback)
     name_month = callback.message.date.month
     list_days = create_day(callback.message.date.year, callback.message.date.month)
-    events = await datebase.show_events_now_month(p.time_update.year, p.time_update.month)
+    events = await datebase.show_events_now_month(p.time_update.year, p.time_update.month, p.time_update.day)
     await callback.message.edit_text(
         text=f'<b>Календарь событий {p.choice_month.year}</b> ',
         reply_markup=create_calendar(3,
@@ -156,6 +156,7 @@ async def process_pres_day(callback: CallbackQuery):
 @router.callback_query(lambda f: f.data == 'forward_c' or f.data == 'backward_c')
 async def process_next_month(callback: CallbackQuery):
     m = await Profile.objects.aget(external_id=callback.from_user.id)
+    time_for_now_month = datetime.now()
     if callback.data == 'forward_c':
         m.choice_month = m.choice_month + relativedelta(months=+1, day=1)
         await m.asave(update_fields=['choice_month'])
@@ -163,7 +164,10 @@ async def process_next_month(callback: CallbackQuery):
         m.choice_month = m.choice_month + relativedelta(months=-1, day=1)
         await m.asave(update_fields=['choice_month'])
     list_days = create_day(m.choice_month.year, m.choice_month.month)
-    events = await datebase.show_events_now_month(m.choice_month.year, m.choice_month.month, )
+    if m.choice_month.month != time_for_now_month.month:
+        events = await datebase.show_events_now_month(m.choice_month.year, m.choice_month.month, m.choice_month.day)
+    else:
+        events = await datebase.show_events_now_month(m.choice_month.year, m.choice_month.month, time_for_now_month.day)
     await callback.message.edit_text(
         text=f'<b>Календарь событий {m.choice_month.year}</b> ',
         reply_markup=create_calendar(3,

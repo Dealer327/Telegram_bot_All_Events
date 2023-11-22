@@ -12,13 +12,14 @@ async def up_date_time_for_user(callback):
     return p
 
 
-async def show_events_now_month(year, month):
-    month_start = datetime(year, month, 1)
+async def show_events_now_month(year, month, day):
+    month_start = datetime(year, month, day)
     month_end = datetime(year=year,
                          month=month + 1,
                          day=1) if month < 12 else datetime(year=year + 1, month=1, day=1)
     events = []
-    async for e in Event.objects.filter(Q(start_time__gte=month_start) & Q(start_time__lt=month_end)):
+    async for e in Event.objects.filter(Q(start_time__gte=month_start) & Q(start_time__lt=month_end) & Q(publish=True)):
+        print(e)
         events.append(str(e.start_time.day))
     return events
 
