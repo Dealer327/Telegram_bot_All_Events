@@ -30,7 +30,7 @@ class Profile(models.Model):
 
 
 class Event(models.Model):
-    name_event = models.CharField(max_length=30,
+    name_event = models.CharField(max_length=60,
                                   verbose_name='Эвент'
                                   )
     info_event = models.CharField(max_length=200,
@@ -46,7 +46,8 @@ class Event(models.Model):
         verbose_name='Время начала',
         null=True)
     create_time = models.DateTimeField(default=timezone.now)
-
+    publish = models.BooleanField(default=False,
+                                  verbose_name='Опубликовано')
     class Meta:
         verbose_name = 'Эвент'
         verbose_name_plural = 'Эвенты'

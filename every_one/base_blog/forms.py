@@ -31,5 +31,5 @@ class EventForm(forms.ModelForm):
             'name_event': forms.TextInput,
             'info_event': forms.TextInput,
             'user_create': forms.TextInput,
-            'start_time': forms.TextInput
+            'start_time': forms.DateField
         }
