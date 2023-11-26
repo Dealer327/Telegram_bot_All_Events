@@ -19,7 +19,6 @@ async def show_events_now_month(year, month, day):
                          day=1) if month < 12 else datetime(year=year + 1, month=1, day=1)
     events = []
     async for e in Event.objects.filter(Q(start_time__gte=month_start) & Q(start_time__lt=month_end) & Q(publish=True)):
-        print(e)
         events.append(str(e.start_time.day))
     return events
 
@@ -32,3 +31,11 @@ async def show_events_press_day(day, cb):
     async for e in Event.objects.filter(start_time__range=(start_date, end_date)).order_by('start_time'):
         events_day.append(e)
     return events_day
+
+
+async def show_info_about_event(id_event: int):
+    e = await Event.objects.aget(id=id_event)
+    return e
+
+
+
