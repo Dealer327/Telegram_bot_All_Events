@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from django.db import models
+from django.db.models import DateTimeField
 from django.utils import timezone
 
 
@@ -42,12 +43,15 @@ class Event(models.Model):
                                     on_delete=models.CASCADE,
                                     null=True
                                     )
-    start_time = models.DateTimeField(
+    url_source = models.SlugField(max_length=100, default=True)
+
+    start_time: DateTimeField = models.DateTimeField(
         verbose_name='Время начала',
         null=True)
     create_time = models.DateTimeField(default=timezone.now)
     publish = models.BooleanField(default=False,
                                   verbose_name='Опубликовано')
+
     class Meta:
         verbose_name = 'Эвент'
         verbose_name_plural = 'Эвенты'

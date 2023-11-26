@@ -9,7 +9,8 @@ from aiogram.fsm.state import State, StatesGroup, default_state
 from ..services.file_handling import create_day, create_button_main_menu
 from ....models import *
 from ..keyboards.main_menu import create_inline_kb
-from ..keyboards.calendar_kb import create_calendar, create_kb_yes_or_no, create_kb_finish_add_event, create_list_events
+from ..keyboards.calendar_kb import create_calendar, create_kb_yes_or_no, create_kb_finish_add_event, \
+    create_list_events, CallbackFactoryForEvent
 from ..lexicon.lexicon_ru import Lexicon_ru, Lexicon_month, Lexicon_form_new_event
 from ..date_base import datebase
 
@@ -17,10 +18,21 @@ from ..date_base import datebase
 router: Router = Router()
 
 
-class Form(StatesGroup):
+# Форма состояний для заполнения информации про эвента
+class FormEvent(StatesGroup):
     name_even = State()
     info_event = State()
     start_time = State()
+    url_event = State()
+    user_created = State()
+
+
+
+# Форма состояний для подтверждения при заполнении информации про эвент
+class FormConfirmation(StatesGroup):
+    conf_date = State()
+    conf_name = State()
+    conf_event = State()
 
 
 @router.message(CommandStart())
@@ -35,21 +47,23 @@ async def process_start_command(message: Message):
     )
 
 
+# Хендлер для срабатывания на нажатия кнопки добавить свое событие
 @router.callback_query(F.data == 'new_event', StateFilter(default_state))
 async def create_new_event(callback: CallbackQuery, state: FSMContext):
-    await state.set_state(Form.start_time)
+    await state.set_state(FormEvent.start_time)
     await callback.message.edit_text(
         text=f'{Lexicon_form_new_event["Date_event"]}',
         reply_markup=create_button_main_menu())
     await callback.answer()
 
 
-@router.message(StateFilter(Form.start_time))
+# Хендлер для срабатывания отправки даты и времени начала эвента
+@router.message(StateFilter(FormEvent.start_time))
 async def process_input_date(message: Message, state: FSMContext):
     await state.update_data(start_time=message.text)
     try:
         datetime.strptime(message.text, '%Y-%m-%d %H:%M').date()
-        await state.set_state(Form.name_even)
+        await state.set_state(FormEvent.name_even)
         await message.answer(
             text=f"{Lexicon_form_new_event['Conf_date']} {message.text}",
             reply_markup=create_kb_yes_or_no(2, 'Yes_date', 'No_date')
@@ -60,10 +74,10 @@ async def process_input_date(message: Message, state: FSMContext):
                              reply_markup=create_button_main_menu())
 
 
-@router.message(StateFilter(Form.name_even))
+@router.message(StateFilter(FormEvent.name_even))
 async def process_input_name_event(message: Message, state: FSMContext):
     await state.update_data(name_event=message.text)
-    await state.set_state(Form.info_event)
+    await state.set_state(FormEvent.info_event)
     await message.answer(text=f"{Lexicon_form_new_event['Conf_name']} {message.text}",
                          reply_markup=create_kb_yes_or_no(2, 'Yes', 'No'))
     await message.delete()
@@ -76,7 +90,8 @@ async def process_next_form(callback: CallbackQuery, state: FSMContext):
         if current_state is None:
             return
         await callback.message.edit_text(text=f'{Lexicon_form_new_event["Info_event"]}',
-                                         reply_markup=create_button_main_menu())
+                                         reply_markup=create_button_main_menu()
+                                         )
         await callback.answer()
     else:
         await callback.message.edit_text(text=f'{Lexicon_form_new_event["Hi_event"]}',
@@ -84,7 +99,7 @@ async def process_next_form(callback: CallbackQuery, state: FSMContext):
         await callback.answer()
 
 
-@router.message(StateFilter(Form.info_event))
+@router.message(StateFilter(FormEvent.info_event))
 async def process_input_info_event(message: Message, state: FSMContext):
     await state.update_data(info_event=message.text)
     data = await state.get_data()
@@ -151,6 +166,15 @@ async def process_pres_day(callback: CallbackQuery):
                                          last_btn='Главное меню'
                                      ))
     await callback.answer()
+
+
+@router.callback_query(CallbackFactoryForEvent.filter())
+async def show_info_about_event(callback: CallbackQuery, callback_data: CallbackFactoryForEvent):
+    event_info = await datebase.show_info_about_event(callback_data.id_event)
+    await callback.message.edit_text(text=f'{event_info.name_event}\n'
+                                          f'{event_info.info_event}\n'
+                                          f'Начало: {event_info.start_time.strftime("%Y-%m-%d в %H:%M")}',
+                                     reply_markup=create_button_main_menu())
 
 
 @router.callback_query(lambda f: f.data == 'forward_c' or f.data == 'backward_c')
