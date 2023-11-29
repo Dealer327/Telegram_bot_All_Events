@@ -20,19 +20,10 @@ router: Router = Router()
 
 # Форма состояний для заполнения информации про эвента
 class FormEvent(StatesGroup):
+    start_time = State()
     name_even = State()
     info_event = State()
-    start_time = State()
-    url_event = State()
-    user_created = State()
-
-
-
-# Форма состояний для подтверждения при заполнении информации про эвент
-class FormConfirmation(StatesGroup):
-    conf_date = State()
-    conf_name = State()
-    conf_event = State()
+    # url_event = State()
 
 
 @router.message(CommandStart())
@@ -74,6 +65,7 @@ async def process_input_date(message: Message, state: FSMContext):
                              reply_markup=create_button_main_menu())
 
 
+# хендлер для заполнения названия эвента
 @router.message(StateFilter(FormEvent.name_even))
 async def process_input_name_event(message: Message, state: FSMContext):
     await state.update_data(name_event=message.text)
@@ -83,6 +75,7 @@ async def process_input_name_event(message: Message, state: FSMContext):
     await message.delete()
 
 
+# хендлер условного подтверждения заполненной формы даты и названия мероприятия
 @router.callback_query(lambda f: f.data == 'Yes' or f.data == 'Yes_date')
 async def process_next_form(callback: CallbackQuery, state: FSMContext):
     if callback.data == 'Yes':
@@ -99,6 +92,10 @@ async def process_next_form(callback: CallbackQuery, state: FSMContext):
         await callback.answer()
 
 
+# @router.message(StateFilter(FormEvent.url_event))
+# async def process_input_url_event(message: Message, state: FSMContext):
+#
+# хендлер для вывода полной информации про эвента и заполнения информации
 @router.message(StateFilter(FormEvent.info_event))
 async def process_input_info_event(message: Message, state: FSMContext):
     await state.update_data(info_event=message.text)
@@ -112,6 +109,7 @@ async def process_input_info_event(message: Message, state: FSMContext):
     await message.delete()
 
 
+# хендлер регистрации эвента и добавления его в бд
 @router.callback_query(F.data == 'Reg')
 async def save_info_in_db(callback: CallbackQuery, state: FSMContext):
     p = await Profile.objects.aget(name=callback.from_user.username)
@@ -138,6 +136,7 @@ async def save_info_in_db(callback: CallbackQuery, state: FSMContext):
         )
 
 
+# вывод календаря
 @router.callback_query(F.data == 'calendar')
 async def process_open_calendar(callback: CallbackQuery):
     p = await datebase.up_date_time_for_user(callback)
@@ -156,6 +155,7 @@ async def process_open_calendar(callback: CallbackQuery):
     await callback.answer()
 
 
+# хендлер отслеживающий нажатие на день в календаре
 @router.callback_query(lambda c: c.data and c.data.isdigit() and int(c.data) <= 31)
 async def process_pres_day(callback: CallbackQuery):
     events = await datebase.show_events_press_day(int(callback.data), callback.from_user.id)
@@ -168,6 +168,7 @@ async def process_pres_day(callback: CallbackQuery):
     await callback.answer()
 
 
+# хендлер для отслеживания нажатого эвента в списке
 @router.callback_query(CallbackFactoryForEvent.filter())
 async def show_info_about_event(callback: CallbackQuery, callback_data: CallbackFactoryForEvent):
     event_info = await datebase.show_info_about_event(callback_data.id_event)
@@ -177,6 +178,7 @@ async def show_info_about_event(callback: CallbackQuery, callback_data: Callback
                                      reply_markup=create_button_main_menu())
 
 
+# хендлер для перелистывания месяцев в календаре
 @router.callback_query(lambda f: f.data == 'forward_c' or f.data == 'backward_c')
 async def process_next_month(callback: CallbackQuery):
     m = await Profile.objects.aget(external_id=callback.from_user.id)
@@ -205,6 +207,7 @@ async def process_next_month(callback: CallbackQuery):
     await callback.answer()
 
 
+# хендлер отслеживающий на нажатие кнопок ведущих в главное меню
 @router.callback_query(lambda f: f.data == 'last_btn' or f.data == 'No' or f.data == 'Cen' or f.data == 'No_date')
 async def process_open_menu(callback: CallbackQuery, state: FSMContext):
     await state.clear()
