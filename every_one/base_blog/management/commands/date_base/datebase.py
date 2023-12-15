@@ -12,6 +12,31 @@ async def up_date_time_for_user(callback):
     return p
 
 
+async def show_count_not_read_event_in_menu(cb):
+    p = await Profile.objects.aget(external_id=cb)
+    events_in_menu = []
+    events_not_read = []
+    dt_all_events = datetime.now().strftime('%Y-%m-%d')
+    async for a in Event.objects.filter(Q(start_time__gte=dt_all_events) & Q(publish=True)):
+        events_in_menu.append(a.id)
+
+    async for e in EventIsRead.objects.filter(profile=p).values_list('event', flat=True):
+        events_not_read.append(e)
+    count_not_read = 0
+
+    for i in events_in_menu:
+        if i not in events_not_read:
+            count_not_read += 1
+    return count_not_read
+
+
+async def show_count_not_read_events(user):
+    events = []
+    async for u in EventIsRead.objects.filter(profile=user).values_list('event', flat=True):
+        events.append(u)
+    return events
+
+
 async def show_events_now_month(year, month, day):
     month_start = datetime(year, month, day)
     month_end = datetime(year=year,
@@ -36,6 +61,3 @@ async def show_events_press_day(day, cb):
 async def show_info_about_event(id_event: int):
     e = await Event.objects.aget(id=id_event)
     return e
-
-
-

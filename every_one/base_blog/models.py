@@ -2,7 +2,6 @@ from datetime import datetime
 
 from django.db import models
 from django.db.models import DateTimeField
-from django.utils import timezone
 
 
 # Create your models here.
@@ -45,13 +44,18 @@ class Event(models.Model):
                                     )
     url_source = models.SlugField(max_length=100, default=True)
 
-    start_time: DateTimeField = models.DateTimeField(
-        verbose_name='Время начала',
-        null=True)
-    create_time = models.DateTimeField(default=timezone.now)
+    start_time: DateTimeField = models.DateTimeField(verbose_name='Время начала',
+                                                     null=True)
+    create_time = models.DateTimeField(default=datetime.now)
     publish = models.BooleanField(default=False,
                                   verbose_name='Опубликовано')
 
     class Meta:
         verbose_name = 'Эвент'
         verbose_name_plural = 'Эвенты'
+
+
+class EventIsRead(models.Model):
+    profile = models.ForeignKey(Profile, on_delete=models.CASCADE)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE)
+    read_date = models.DateTimeField(auto_now_add=True)

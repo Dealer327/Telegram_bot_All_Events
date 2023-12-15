@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Profile, Event
+from .models import Profile, Event, EventIsRead
 from .forms import ProfileForm
 
 
@@ -17,3 +17,8 @@ class ProfileAdmin(admin.ModelAdmin):
 class EventAdmin(admin.ModelAdmin):
     list_editable = ('name_event', 'info_event', 'publish')
     list_display = ('id', 'name_event', 'info_event', 'user_create', 'start_time', 'create_time', 'publish')
+
+
+@admin.register(EventIsRead)
+class EventIsReadAdmin(admin.ModelAdmin):
+    list_display = ('profile', 'event', 'read_date')
