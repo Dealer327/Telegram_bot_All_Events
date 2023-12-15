@@ -8,7 +8,7 @@ from aiogram.fsm.state import State, StatesGroup, default_state
 
 from ..services.file_handling import create_day, create_button_main_menu
 from ....models import *
-from ..keyboards.main_menu import create_inline_kb
+from ..keyboards.main_menu import create_inline_kb, create_button_back_and_mani_menu
 from ..keyboards.calendar_kb import create_calendar, create_kb_yes_or_no, create_kb_finish_add_event, \
     create_list_events, CallbackFactoryForEvent
 from ..lexicon.lexicon_ru import Lexicon_ru, Lexicon_month, Lexicon_form_new_event
@@ -26,9 +26,14 @@ class FormEvent(StatesGroup):
     # url_event = State()
 
 
+class FormOpenEvents(StatesGroup):
+    open_day = State()
+
+
 @router.message(CommandStart())
 async def process_start_command(message: Message):
-    keyboard_menu = create_inline_kb(1, 'calendar', 'new_event')
+    all_not_read_events = await datebase.show_count_not_read_events(message.from_user.id)
+    keyboard_menu = create_inline_kb(1, all_not_read_events, 'calendar', 'new_event')
     await Profile.objects.aget_or_create(
         external_id=message.from_user.id,
         defaults={'name': message.from_user.username})
@@ -92,9 +97,6 @@ async def process_next_form(callback: CallbackQuery, state: FSMContext):
         await callback.answer()
 
 
-# @router.message(StateFilter(FormEvent.url_event))
-# async def process_input_url_event(message: Message, state: FSMContext):
-#
 # хендлер для вывода полной информации про эвента и заполнения информации
 @router.message(StateFilter(FormEvent.info_event))
 async def process_input_info_event(message: Message, state: FSMContext):
@@ -113,7 +115,7 @@ async def process_input_info_event(message: Message, state: FSMContext):
 @router.callback_query(F.data == 'Reg')
 async def save_info_in_db(callback: CallbackQuery, state: FSMContext):
     p = await Profile.objects.aget(name=callback.from_user.username)
-    keyboard_menu = create_inline_kb(1, 'calendar', 'new_event')
+    keyboard_menu = create_inline_kb(1, None, 'calendar', 'new_event')
     try:
         data = await state.get_data()
         event = Event(name_event=data['name_event'],
@@ -137,12 +139,15 @@ async def save_info_in_db(callback: CallbackQuery, state: FSMContext):
 
 
 # вывод календаря
-@router.callback_query(F.data == 'calendar')
+@router.callback_query(lambda f: f.data == 'calendar' or f.data == 'back_in_calendar')
 async def process_open_calendar(callback: CallbackQuery):
     p = await datebase.up_date_time_for_user(callback)
     name_month = callback.message.date.month
     list_days = create_day(callback.message.date.year, callback.message.date.month)
-    events = await datebase.show_events_now_month(p.time_update.year, p.time_update.month, p.time_update.day)
+    events = await datebase.show_events_now_month(p.time_update.year,
+                                                  p.time_update.month,
+                                                  p.time_update.day
+                                                  )
     await callback.message.edit_text(
         text=f'<b>Календарь событий {p.choice_month.year}</b> ',
         reply_markup=create_calendar(3,
@@ -156,26 +161,45 @@ async def process_open_calendar(callback: CallbackQuery):
 
 
 # хендлер отслеживающий нажатие на день в календаре
-@router.callback_query(lambda c: c.data and c.data.isdigit() and int(c.data) <= 31)
-async def process_pres_day(callback: CallbackQuery):
-    events = await datebase.show_events_press_day(int(callback.data), callback.from_user.id)
-    await callback.message.edit_text(text='Список',
-                                     reply_markup=create_list_events(
-                                         width=1,
-                                         events=events,
-                                         last_btn='Главное меню'
-                                     ))
-    await callback.answer()
+@router.callback_query(lambda c: c.data and c.data.isdigit() and int(c.data) <= 31 or c.data == 'back_in_events')
+async def process_pres_day(callback: CallbackQuery, state: FSMContext):
+    if callback.data != 'back_in_events':
+        await state.update_data(open_day=callback.data)
+        events = await datebase.show_events_press_day(int(callback.data), callback.from_user.id)
+        await callback.message.edit_text(text='Список',
+                                         reply_markup=create_list_events(
+                                             1,
+                                             events,
+                                             'mani_menu',
+                                             'back_in_calendar'
+                                         ))
+        await callback.answer()
+    else:
+        s = await state.get_data()
+        events = await datebase.show_events_press_day(int(s['open_day']), callback.from_user.id)
+        await callback.message.edit_text(text='Список',
+                                         reply_markup=create_list_events(
+                                             1,
+                                             events,
+                                             'mani_menu',
+                                             'back_in_calendar'
+                                         ))
+        await callback.answer()
 
 
 # хендлер для отслеживания нажатого эвента в списке
 @router.callback_query(CallbackFactoryForEvent.filter())
 async def show_info_about_event(callback: CallbackQuery, callback_data: CallbackFactoryForEvent):
+    is_user = await Profile.objects.aget(external_id=callback.from_user.id)
     event_info = await datebase.show_info_about_event(callback_data.id_event)
+    await EventIsRead.objects.aget_or_create(profile=is_user, event=event_info)
     await callback.message.edit_text(text=f'{event_info.name_event}\n'
                                           f'{event_info.info_event}\n'
                                           f'Начало: {event_info.start_time.strftime("%Y-%m-%d в %H:%M")}',
-                                     reply_markup=create_button_main_menu())
+                                     reply_markup=create_button_back_and_mani_menu(1,
+                                                                                   'back_in_events',
+                                                                                   'mani_menu'
+                                                                                   ))
 
 
 # хендлер для перелистывания месяцев в календаре
@@ -193,7 +217,8 @@ async def process_next_month(callback: CallbackQuery):
     if m.choice_month.month != time_for_now_month.month:
         events = await datebase.show_events_now_month(m.choice_month.year, m.choice_month.month, m.choice_month.day)
     else:
-        events = await datebase.show_events_now_month(m.choice_month.year, m.choice_month.month, time_for_now_month.day)
+        events = await datebase.show_events_now_month(m.choice_month.year, m.choice_month.month,
+                                                      time_for_now_month.day)
     await callback.message.edit_text(
         text=f'<b>Календарь событий {m.choice_month.year}</b> ',
         reply_markup=create_calendar(3,
@@ -208,10 +233,17 @@ async def process_next_month(callback: CallbackQuery):
 
 
 # хендлер отслеживающий на нажатие кнопок ведущих в главное меню
-@router.callback_query(lambda f: f.data == 'last_btn' or f.data == 'No' or f.data == 'Cen' or f.data == 'No_date')
+@router.callback_query(lambda f:
+                       f.data == 'last_btn' or
+                       f.data == 'No' or
+                       f.data == 'Cen' or
+                       f.data == 'No_date' or
+                       f.data == 'mani_menu'
+                       )
 async def process_open_menu(callback: CallbackQuery, state: FSMContext):
     await state.clear()
-    keyboard_menu = create_inline_kb(1, 'calendar', 'new_event')
+    all_not_read_events = await datebase.show_count_not_read_event_in_menu(callback.from_user.id)
+    keyboard_menu = create_inline_kb(1, all_not_read_events, 'calendar', 'new_event')
     await callback.message.edit_text(
         text=Lexicon_ru['/start'],
         reply_markup=keyboard_menu)

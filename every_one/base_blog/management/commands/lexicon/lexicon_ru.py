@@ -4,6 +4,10 @@ Lexicon_ru: dict[str, str] = {'/start': '<b>Привет, друг!</b>\nЭто 
                                         ' создать свои!\nТы сможешь находить друзей и единомышленников в одном месте!',
                               'calendar': 'календарь событий',
                               'new_event': 'создать свое событие',
+                              'back_in_calendar': 'Назад',
+                              'back_in_events': 'Назад',
+                              'mani_menu': 'Главное меню',
+
 
                               }
 Lexicon_form_new_event: dict[str, str] = {'Yes_date': '✅',

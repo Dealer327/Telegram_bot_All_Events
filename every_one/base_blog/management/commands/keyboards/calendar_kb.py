@@ -1,10 +1,8 @@
-from datetime import datetime
-
 from aiogram.types import InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.filters.callback_data import CallbackData
 
-from ..lexicon.lexicon_ru import Lexicon_month, Lexicon_form_new_event
+from ..lexicon.lexicon_ru import Lexicon_month, Lexicon_form_new_event, Lexicon_ru
 
 
 class CallbackFactoryForEvent(CallbackData, prefix="Event", sep="_"):
@@ -47,6 +45,7 @@ def create_calendar(width, events, list_days, *args, last_btn: str | None = None
                 text=Lexicon_month[button] if button in Lexicon_month else button,
                 callback_data=button
             ))
+
     for button_d in list_days:
         if button_d in events:
             buttons_days.append(InlineKeyboardButton(
@@ -67,19 +66,21 @@ def create_calendar(width, events, list_days, *args, last_btn: str | None = None
     return kb_calendar.as_markup()
 
 
-def create_list_events(width, events, last_btn):
+def create_list_events(width, events, *args):
     kb_event_day = InlineKeyboardBuilder()
     buttons = []
+    if args:
+        for button in args:
+            buttons.append(InlineKeyboardButton(
+                text=f'{Lexicon_ru[button]}' if button in Lexicon_ru else button,
+                callback_data=button
+            ))
     for button in events:
         buttons.append(InlineKeyboardButton(
-            text=f'{button.start_time.strftime("%H:%M")} - {button.name_event}',
+            text=f'{button.start_time.strftime("%H:%M")} - {button.name_event} ✌',
             callback_data=CallbackFactoryForEvent(id_event=button.id
                                                   ).pack()
         ))
-    kb_event_day.row(*buttons, width=width)
-    if last_btn:
-        kb_event_day.row(InlineKeyboardButton(
-            text=last_btn,
-            callback_data='last_btn'
-        ))
+    kb_event_day.row(*buttons[::-1], width=width)
+
     return kb_event_day.as_markup()

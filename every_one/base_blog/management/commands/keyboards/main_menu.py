@@ -13,7 +13,8 @@ async def set_main_menu(bot: Bot):
     await bot.set_my_commands(main_menu_commands)
 
 
-def create_inline_kb(width: int, *args: str, last_btn: str | None = None) -> InlineKeyboardMarkup:
+def create_inline_kb(width: int, events: int | None = None, *args: str,
+                     last_btn: str | None = None) -> InlineKeyboardMarkup:
     # Инициализируем билдер
     kb_builder = InlineKeyboardBuilder()
     # Инициализируем список для кнопок
@@ -22,9 +23,19 @@ def create_inline_kb(width: int, *args: str, last_btn: str | None = None) -> Inl
     # Заполняем список кнопками из аргументов args и kwargs
     if args:
         for button in args:
-            buttons.append(InlineKeyboardButton(
-                text=Lexicon_ru[button] if button in Lexicon_ru else button,
-                callback_data=button))
+            if button == 'calendar':
+                if events != 0:
+                    buttons.append(InlineKeyboardButton(
+                        text=f'{Lexicon_ru[button]} {str(events)}🔥' if button in Lexicon_ru else button,
+                        callback_data=button))
+                else:
+                    buttons.append(InlineKeyboardButton(
+                        text=f'{Lexicon_ru[button]}' if button in Lexicon_ru else button,
+                        callback_data=button))
+            else:
+                buttons.append(InlineKeyboardButton(
+                    text=f'{Lexicon_ru[button]}' if button in Lexicon_ru else button,
+                    callback_data=button))
     # Распаковываем список с кнопками в билдер методом row c параметром width
     kb_builder.row(*buttons, width=width)
     if last_btn:
@@ -34,4 +45,19 @@ def create_inline_kb(width: int, *args: str, last_btn: str | None = None) -> Inl
         ))
 
     # Возвращаем объект инлайн-клавиатуры
+    return kb_builder.as_markup()
+
+
+def create_button_back_and_mani_menu(width: int, *args):
+    # Инициализируем билдер
+    kb_builder = InlineKeyboardBuilder()
+    # Инициализируем список для кнопок
+    buttons: list[InlineKeyboardButton] = []
+
+    if args:
+        for button in args:
+            buttons.append(InlineKeyboardButton(
+                text=f'{Lexicon_ru[button]}' if button in Lexicon_ru else button,
+                callback_data=button))
+    kb_builder.row(*buttons, width=width)
     return kb_builder.as_markup()
