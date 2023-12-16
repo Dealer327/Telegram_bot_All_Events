@@ -39,6 +39,8 @@ def create_calendar(width, events, list_days, *args, last_btn: str | None = None
     kb_calendar = InlineKeyboardBuilder()
     buttons = []
     buttons_days = []
+    all_events = events[0]
+    events_not_read = events[1]
     if args:
         for button in args:
             buttons.append(InlineKeyboardButton(
@@ -47,9 +49,16 @@ def create_calendar(width, events, list_days, *args, last_btn: str | None = None
             ))
 
     for button_d in list_days:
-        if button_d in events:
+        if button_d in all_events and button_d in events_not_read:
+
             buttons_days.append(InlineKeyboardButton(
-                text=f'{button_d}({events.count(button_d)})',
+                text=f'{button_d}({all_events.count(button_d)}) 🔥',
+                callback_data=button_d
+            ))
+        elif button_d in all_events and button_d not in events_not_read:
+
+            buttons_days.append(InlineKeyboardButton(
+                text=f'{button_d}({all_events.count(button_d)})',
                 callback_data=button_d
             ))
         else:
@@ -69,18 +78,27 @@ def create_calendar(width, events, list_days, *args, last_btn: str | None = None
 def create_list_events(width, events, *args):
     kb_event_day = InlineKeyboardBuilder()
     buttons = []
+    all_events = events[0]
+    events_not_read = events[1]
     if args:
         for button in args:
             buttons.append(InlineKeyboardButton(
                 text=f'{Lexicon_ru[button]}' if button in Lexicon_ru else button,
                 callback_data=button
             ))
-    for button in events:
-        buttons.append(InlineKeyboardButton(
-            text=f'{button.start_time.strftime("%H:%M")} - {button.name_event} ✌',
-            callback_data=CallbackFactoryForEvent(id_event=button.id
-                                                  ).pack()
-        ))
+    for button in all_events:
+        if button in events_not_read:
+            buttons.append(InlineKeyboardButton(
+                text=f'{button.start_time.strftime("%H:%M")} - {button.name_event}🔥',
+                callback_data=CallbackFactoryForEvent(id_event=button.id
+                                                      ).pack()
+            ))
+        else:
+            buttons.append(InlineKeyboardButton(
+                text=f'{button.start_time.strftime("%H:%M")} - {button.name_event} ✌',
+                callback_data=CallbackFactoryForEvent(id_event=button.id
+                                                      ).pack()
+            ))
     kb_event_day.row(*buttons[::-1], width=width)
 
     return kb_event_day.as_markup()

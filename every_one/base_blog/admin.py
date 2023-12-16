@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Profile, Event, EventIsRead
+from .models import Profile, Event, EventIsRead, Admin
 from .forms import ProfileForm
 
 
@@ -22,3 +22,8 @@ class EventAdmin(admin.ModelAdmin):
 @admin.register(EventIsRead)
 class EventIsReadAdmin(admin.ModelAdmin):
     list_display = ('profile', 'event', 'read_date')
+
+
+@admin.register(Admin)
+class UserAdminAdmin(admin.ModelAdmin):
+    list_display = ('id', 'external_id', 'name')

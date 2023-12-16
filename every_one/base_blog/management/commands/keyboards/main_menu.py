@@ -24,13 +24,13 @@ def create_inline_kb(width: int, events: int | None = None, *args: str,
     if args:
         for button in args:
             if button == 'calendar':
-                if events != 0:
+                if events == 0 or events is None:
                     buttons.append(InlineKeyboardButton(
-                        text=f'{Lexicon_ru[button]} {str(events)}🔥' if button in Lexicon_ru else button,
+                        text=f'{Lexicon_ru[button]}' if button in Lexicon_ru else button,
                         callback_data=button))
                 else:
                     buttons.append(InlineKeyboardButton(
-                        text=f'{Lexicon_ru[button]}' if button in Lexicon_ru else button,
+                        text=f'{Lexicon_ru[button]} {str(events)}🔥' if button in Lexicon_ru else button,
                         callback_data=button))
             else:
                 buttons.append(InlineKeyboardButton(

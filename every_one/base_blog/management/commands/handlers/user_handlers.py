@@ -32,11 +32,11 @@ class FormOpenEvents(StatesGroup):
 
 @router.message(CommandStart())
 async def process_start_command(message: Message):
-    all_not_read_events = await datebase.show_count_not_read_events(message.from_user.id)
-    keyboard_menu = create_inline_kb(1, all_not_read_events, 'calendar', 'new_event')
     await Profile.objects.aget_or_create(
         external_id=message.from_user.id,
         defaults={'name': message.from_user.username})
+    all_not_read_events = await datebase.show_count_not_read_event_in_menu(message.from_user.id)
+    keyboard_menu = create_inline_kb(1, all_not_read_events, 'calendar', 'new_event')
     await message.answer(
         text=Lexicon_ru['/start'],
         reply_markup=keyboard_menu
@@ -113,7 +113,7 @@ async def process_input_info_event(message: Message, state: FSMContext):
 
 # хендлер регистрации эвента и добавления его в бд
 @router.callback_query(F.data == 'Reg')
-async def save_info_in_db(callback: CallbackQuery, state: FSMContext):
+async def save_info_in_db(callback: CallbackQuery, state: FSMContext, bot):
     p = await Profile.objects.aget(name=callback.from_user.username)
     keyboard_menu = create_inline_kb(1, None, 'calendar', 'new_event')
     try:
@@ -122,14 +122,21 @@ async def save_info_in_db(callback: CallbackQuery, state: FSMContext):
                       info_event=data['info_event'],
                       user_create=p,
                       start_time=data['start_time'])
-        await event.asave()
-        await state.clear()
-        # ДОДЕЛАТЬ: возможность добавлять одно событие
 
+        admins = await datebase.all_admins()
+        for a in admins:
+            await bot.send_message(chat_id=a, text=f'{event.name_event}\n'
+                                                   f'{event.info_event}\n'
+                                                   f'{event.start_time}\n'
+                                                   f'{event.user_create}')
         await callback.message.edit_text(
             text=Lexicon_ru['/start'],
             reply_markup=keyboard_menu
         )
+        await event.asave()
+        await state.clear()
+        # ДОДЕЛАТЬ: возможность добавлять одно событие
+
         await callback.answer()
     except ValueError:
         await callback.message.edit_text(
@@ -141,10 +148,12 @@ async def save_info_in_db(callback: CallbackQuery, state: FSMContext):
 # вывод календаря
 @router.callback_query(lambda f: f.data == 'calendar' or f.data == 'back_in_calendar')
 async def process_open_calendar(callback: CallbackQuery):
+    u = callback.from_user.id
     p = await datebase.up_date_time_for_user(callback)
     name_month = callback.message.date.month
     list_days = create_day(callback.message.date.year, callback.message.date.month)
-    events = await datebase.show_events_now_month(p.time_update.year,
+    events = await datebase.show_events_now_month(u,
+                                                  p.time_update.year,
                                                   p.time_update.month,
                                                   p.time_update.day
                                                   )
@@ -215,9 +224,9 @@ async def process_next_month(callback: CallbackQuery):
         await m.asave(update_fields=['choice_month'])
     list_days = create_day(m.choice_month.year, m.choice_month.month)
     if m.choice_month.month != time_for_now_month.month:
-        events = await datebase.show_events_now_month(m.choice_month.year, m.choice_month.month, m.choice_month.day)
+        events = await datebase.show_events_now_month(m, m.choice_month.year, m.choice_month.month, m.choice_month.day)
     else:
-        events = await datebase.show_events_now_month(m.choice_month.year, m.choice_month.month,
+        events = await datebase.show_events_now_month(m, m.choice_month.year, m.choice_month.month,
                                                       time_for_now_month.day)
     await callback.message.edit_text(
         text=f'<b>Календарь событий {m.choice_month.year}</b> ',

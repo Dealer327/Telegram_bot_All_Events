@@ -5,6 +5,15 @@ from django.db.models import DateTimeField
 
 
 # Create your models here.
+class Admin(models.Model):
+    external_id = models.PositiveIntegerField(
+        verbose_name='ID пользователя',
+        unique=True,
+    )
+    name = models.TextField(
+        verbose_name='Имя пользователя',
+    )
+
 
 class Profile(models.Model):
     external_id = models.PositiveIntegerField(
@@ -33,7 +42,7 @@ class Event(models.Model):
     name_event = models.CharField(max_length=60,
                                   verbose_name='Эвент'
                                   )
-    info_event = models.CharField(max_length=200,
+    info_event = models.CharField(max_length=700,
                                   verbose_name='Информация',
                                   default=True
                                   )
