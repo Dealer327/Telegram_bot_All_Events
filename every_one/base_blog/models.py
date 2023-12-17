@@ -58,6 +58,9 @@ class Event(models.Model):
     create_time = models.DateTimeField(default=datetime.now)
     publish = models.BooleanField(default=False,
                                   verbose_name='Опубликовано')
+    url = models.CharField(max_length=200,
+                           verbose_name='Ссылка',
+                           null=True)
 
     class Meta:
         verbose_name = 'Эвент'

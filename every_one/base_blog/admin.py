@@ -16,7 +16,7 @@ class ProfileAdmin(admin.ModelAdmin):
 @admin.register(Event)
 class EventAdmin(admin.ModelAdmin):
     list_editable = ('name_event', 'info_event', 'publish')
-    list_display = ('id', 'name_event', 'info_event', 'user_create', 'start_time', 'create_time', 'publish')
+    list_display = ('id', 'name_event', 'info_event', 'user_create', 'start_time', 'create_time', 'publish', 'url')
 
 
 @admin.register(EventIsRead)
