@@ -7,7 +7,7 @@ from aiogram.fsm.storage.redis import RedisStorage, Redis
 from aiogram import Bot, Dispatcher
 
 from .config_data.config import Config, load_config
-from .handlers import user_handlers
+from .handlers import user_handlers, admin_hundlers
 
 # Инициализация логгера
 logger = logging.getLogger(__name__)
@@ -26,6 +26,7 @@ class Command(BaseCommand):
         dp: Dispatcher = Dispatcher()
 
         dp.include_router(user_handlers.router)
+        dp.include_router(admin_hundlers.router)
 
         await bot.delete_webhook(drop_pending_updates=True)
         await dp.start_polling(bot)
