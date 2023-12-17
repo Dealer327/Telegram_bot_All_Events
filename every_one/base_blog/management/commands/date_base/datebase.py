@@ -75,8 +75,21 @@ async def show_info_about_event(id_event: int):
     return e
 
 
+async def add_new_event(id_event: int):
+    e = await Event.objects.aget(id=id_event)
+    e.publish = True
+    await e.asave(update_fields=['publish'])
+
+
 async def all_admins():
     admins = []
     async for a in Admin.objects.all():
         admins.append(a.external_id)
     return admins
+
+
+async def all_users():
+    users = []
+    async for u in Profile.objects.all():
+        users.append(u)
+    return users
