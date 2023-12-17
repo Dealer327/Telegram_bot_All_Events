@@ -51,7 +51,6 @@ class Event(models.Model):
                                     on_delete=models.CASCADE,
                                     null=True
                                     )
-    url_source = models.SlugField(max_length=100, default=True)
 
     start_time: DateTimeField = models.DateTimeField(verbose_name='Время начала',
                                                      null=True)
@@ -60,7 +59,8 @@ class Event(models.Model):
                                   verbose_name='Опубликовано')
     url = models.CharField(max_length=200,
                            verbose_name='Ссылка',
-                           null=True)
+                           null=True,
+                           default='Нет ссылки')
 
     class Meta:
         verbose_name = 'Эвент'

@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from aiogram.types import Message, CallbackQuery
 from dateutil.relativedelta import relativedelta
 
@@ -62,13 +64,17 @@ async def create_new_event(callback: CallbackQuery, state: FSMContext):
 async def process_input_date(message: Message, state: FSMContext):
     await state.update_data(start_time=message.text)
     try:
-        datetime.strptime(message.text, '%Y-%m-%d %H:%M').date()
-        await state.set_state(FormEvent.name_even)
-        await message.answer(
-            text=f"{Lexicon_form_new_event['Conf_date']} {message.text}")
-        await message.answer(text=f'{Lexicon_form_new_event["Hi_event"]}',
-                             reply_markup=create_button_main_menu())
-        await message.delete()
+        dt = datetime.strptime(message.text, '%Y-%m-%d %H:%M').date()
+
+        if dt > datetime.now().date() + timedelta(days=90):
+            await message.answer(text=f'{Lexicon_form_new_event["Error_date_three_month"]}',
+                                 reply_markup=create_button_main_menu())
+        else:
+            await state.set_state(FormEvent.name_even)
+            await message.answer(text=f"{Lexicon_form_new_event['Conf_date']} {message.text}")
+            await message.answer(text=f'{Lexicon_form_new_event["Hi_event"]}',
+                                 reply_markup=create_button_main_menu())
+            await message.delete()
     except ValueError:
         await message.answer(text=f'{Lexicon_form_new_event["Error_date"]}',
                              reply_markup=create_button_main_menu())
@@ -78,6 +84,7 @@ async def process_input_date(message: Message, state: FSMContext):
 @router.message(StateFilter(FormEvent.name_even))
 async def process_input_name_event(message: Message, state: FSMContext):
     await state.update_data(name_event=message.text)
+
     await state.set_state(FormEvent.info_event)
     await message.answer(text=f"{Lexicon_form_new_event['Conf_name']} {message.text}")
     await message.answer(text=f'{Lexicon_form_new_event["Info_event"]}',
@@ -87,34 +94,15 @@ async def process_input_name_event(message: Message, state: FSMContext):
     await message.delete()
 
 
-# хендлер условного подтверждения заполненной формы даты и названия мероприятия
-# @router.callback_query(lambda f: f.data == 'Yes' or f.data == 'Yes_date')
-# async def process_next_form(callback: CallbackQuery, state: FSMContext):
-#     if callback.data == 'Yes':
-#         current_state = await state.get_state()
-#         if current_state is None:
-#             return
-#         await callback.message.edit_text(text=f'{Lexicon_form_new_event["Info_event"]}',
-#                                          reply_markup=create_button_main_menu()
-#                                          )
-#         await callback.answer()
-#     else:
-#         await callback.message.edit_text(text=f'{Lexicon_form_new_event["Hi_event"]}',
-#                                          reply_markup=create_button_main_menu())
-#         await callback.answer()
-
-
 # хендлер для вывода полной информации про эвента и заполнения информации
 @router.message(StateFilter(FormEvent.info_event))
 async def process_input_info_event(message: Message, state: FSMContext):
     await state.update_data(info_event=message.text)
-
     await state.set_state(FormEvent.url_event)
     await message.answer(text=f"{Lexicon_form_new_event['Info_event']} {message.text}")
     await message.answer(text=f'{Lexicon_form_new_event["url_event"]}',
                          reply_markup=create_button_main_menu()
                          )
-
     await message.delete()
 
 
@@ -129,6 +117,7 @@ async def process_input_url_event(message: Message, state: FSMContext):
                               f'{data["url_event"]}',
                          reply_markup=create_kb_finish_add_event(2, 'Reg', 'Cen')
                          )
+    await message.delete()
 
 
 # хендлер регистрации эвента и добавления его в бд
@@ -154,14 +143,15 @@ async def save_info_in_db(callback: CallbackQuery, state: FSMContext, bot):
                                    reply_markup=create_kb_yes_or_no(2, 'Yes_reg_new_event', 'No_reg_new_event'
                                                                     )
                                    )
+        await callback.answer(
+            text='Дождитесь пока модератор добавить ваше мероприятие',
+            show_alert=True
+        )
         await callback.message.edit_text(
             text=Lexicon_ru['/start'],
             reply_markup=keyboard_menu
         )
-
         await state.clear()
-        # ДОДЕЛАТЬ: возможность добавлять одно событие
-
         await callback.answer()
     except ValueError:
         await callback.message.edit_text(
@@ -172,7 +162,7 @@ async def save_info_in_db(callback: CallbackQuery, state: FSMContext, bot):
 
 # вывод календаря
 @router.callback_query(lambda f: f.data == 'calendar' or f.data == 'back_in_calendar')
-async def process_open_calendar(callback: CallbackQuery, bot):
+async def process_open_calendar(callback: CallbackQuery):
     user = callback.from_user.id
     profile = await datebase.up_date_time_for_user(callback)
     name_month = callback.message.date.month
@@ -229,8 +219,9 @@ async def show_info_about_event(callback: CallbackQuery, callback_data: Callback
     await EventIsRead.objects.aget_or_create(profile=is_user, event=event_info)
     await callback.message.edit_text(text=f'{event_info.name_event}\n'
                                           f'{event_info.info_event}\n'
-                                          f'Начало: {event_info.start_time.strftime("%Y-%m-%d в %H:%M")}'
-                                          f'Ссылка: {event_info.url}',
+                                          f'Начало: {event_info.start_time.strftime("%Y-%m-%d в %H:%M")}\n'
+                                          f'Ссылка: {event_info.url}'
+                                     ,
                                      reply_markup=create_button_back_and_mani_menu(1,
                                                                                    'back_in_events',
                                                                                    'mani_menu'
