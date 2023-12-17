@@ -217,8 +217,8 @@ async def show_info_about_event(callback: CallbackQuery, callback_data: Callback
     is_user = await Profile.objects.aget(external_id=callback.from_user.id)
     event_info = await datebase.show_info_about_event(callback_data.id_event)
     await EventIsRead.objects.aget_or_create(profile=is_user, event=event_info)
-    await callback.message.edit_text(text=f'{event_info.name_event}\n'
-                                          f'{event_info.info_event}\n'
+    await callback.message.edit_text(text=f'{event_info.name_event}\n\n'
+                                          f'{event_info.info_event}\n\n'
                                           f'Начало: {event_info.start_time.strftime("%Y-%m-%d в %H:%M")}\n'
                                           f'Ссылка: {event_info.url}'
                                      ,
@@ -272,6 +272,6 @@ async def process_open_menu(callback: CallbackQuery, state: FSMContext):
     all_not_read_events = await datebase.show_count_not_read_event_in_menu(callback.from_user.id)
     keyboard_menu = create_inline_kb(1, all_not_read_events, 'calendar', 'new_event')
     await callback.message.edit_text(
-        text=Lexicon_ru['/start'],
+        text=f"{Lexicon_ru['/start']}",
         reply_markup=keyboard_menu)
     await callback.answer()

@@ -13,7 +13,9 @@ async def set_main_menu(bot: Bot):
     await bot.set_my_commands(main_menu_commands)
 
 
-def create_inline_kb(width: int, events: int | None = None, *args: str,
+def create_inline_kb(width: int,
+                     events: int | None = None,
+                     *args: str,
                      last_btn: str | None = None) -> InlineKeyboardMarkup:
     # Инициализируем билдер
     kb_builder = InlineKeyboardBuilder()
@@ -48,7 +50,7 @@ def create_inline_kb(width: int, events: int | None = None, *args: str,
     return kb_builder.as_markup()
 
 
-def create_button_back_and_mani_menu(width: int, *args):
+def create_button_back_and_mani_menu(width: int, *args) -> InlineKeyboardMarkup:
     # Инициализируем билдер
     kb_builder = InlineKeyboardBuilder()
     # Инициализируем список для кнопок
