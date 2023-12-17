@@ -23,7 +23,11 @@ class FormEvent(StatesGroup):
     start_time = State()
     name_even = State()
     info_event = State()
-    # url_event = State()
+    url_event = State()
+
+
+class FormAddNewEvent(StatesGroup):
+    event_id = State()
 
 
 class FormOpenEvents(StatesGroup):
@@ -61,9 +65,9 @@ async def process_input_date(message: Message, state: FSMContext):
         datetime.strptime(message.text, '%Y-%m-%d %H:%M').date()
         await state.set_state(FormEvent.name_even)
         await message.answer(
-            text=f"{Lexicon_form_new_event['Conf_date']} {message.text}",
-            reply_markup=create_kb_yes_or_no(2, 'Yes_date', 'No_date')
-        )
+            text=f"{Lexicon_form_new_event['Conf_date']} {message.text}")
+        await message.answer(text=f'{Lexicon_form_new_event["Hi_event"]}',
+                             reply_markup=create_button_main_menu())
         await message.delete()
     except ValueError:
         await message.answer(text=f'{Lexicon_form_new_event["Error_date"]}',
@@ -75,40 +79,56 @@ async def process_input_date(message: Message, state: FSMContext):
 async def process_input_name_event(message: Message, state: FSMContext):
     await state.update_data(name_event=message.text)
     await state.set_state(FormEvent.info_event)
-    await message.answer(text=f"{Lexicon_form_new_event['Conf_name']} {message.text}",
-                         reply_markup=create_kb_yes_or_no(2, 'Yes', 'No'))
+    await message.answer(text=f"{Lexicon_form_new_event['Conf_name']} {message.text}")
+    await message.answer(text=f'{Lexicon_form_new_event["Info_event"]}',
+                         reply_markup=create_button_main_menu()
+                         )
+
     await message.delete()
 
 
 # хендлер условного подтверждения заполненной формы даты и названия мероприятия
-@router.callback_query(lambda f: f.data == 'Yes' or f.data == 'Yes_date')
-async def process_next_form(callback: CallbackQuery, state: FSMContext):
-    if callback.data == 'Yes':
-        current_state = await state.get_state()
-        if current_state is None:
-            return
-        await callback.message.edit_text(text=f'{Lexicon_form_new_event["Info_event"]}',
-                                         reply_markup=create_button_main_menu()
-                                         )
-        await callback.answer()
-    else:
-        await callback.message.edit_text(text=f'{Lexicon_form_new_event["Hi_event"]}',
-                                         reply_markup=create_button_main_menu())
-        await callback.answer()
+# @router.callback_query(lambda f: f.data == 'Yes' or f.data == 'Yes_date')
+# async def process_next_form(callback: CallbackQuery, state: FSMContext):
+#     if callback.data == 'Yes':
+#         current_state = await state.get_state()
+#         if current_state is None:
+#             return
+#         await callback.message.edit_text(text=f'{Lexicon_form_new_event["Info_event"]}',
+#                                          reply_markup=create_button_main_menu()
+#                                          )
+#         await callback.answer()
+#     else:
+#         await callback.message.edit_text(text=f'{Lexicon_form_new_event["Hi_event"]}',
+#                                          reply_markup=create_button_main_menu())
+#         await callback.answer()
 
 
 # хендлер для вывода полной информации про эвента и заполнения информации
 @router.message(StateFilter(FormEvent.info_event))
 async def process_input_info_event(message: Message, state: FSMContext):
     await state.update_data(info_event=message.text)
+
+    await state.set_state(FormEvent.url_event)
+    await message.answer(text=f"{Lexicon_form_new_event['Info_event']} {message.text}")
+    await message.answer(text=f'{Lexicon_form_new_event["url_event"]}',
+                         reply_markup=create_button_main_menu()
+                         )
+
+    await message.delete()
+
+
+@router.message(StateFilter(FormEvent.url_event))
+async def process_input_url_event(message: Message, state: FSMContext):
+    await state.update_data(url_event=message.text)
     data = await state.get_data()
     await message.answer(text=f'{Lexicon_form_new_event["Conf_info"]} '
                               f'{data["name_event"]} '
                               f'{data["info_event"]} '
-                              f' {data["start_time"]}',
+                              f'{data["start_time"]}'
+                              f'{data["url_event"]}',
                          reply_markup=create_kb_finish_add_event(2, 'Reg', 'Cen')
                          )
-    await message.delete()
 
 
 # хендлер регистрации эвента и добавления его в бд
@@ -121,19 +141,24 @@ async def save_info_in_db(callback: CallbackQuery, state: FSMContext, bot):
         event = Event(name_event=data['name_event'],
                       info_event=data['info_event'],
                       user_create=p,
-                      start_time=data['start_time'])
-
+                      start_time=data['start_time'],
+                      url=data['url_event'])
+        await event.asave()
         admins = await datebase.all_admins()
         for a in admins:
             await bot.send_message(chat_id=a, text=f'{event.name_event}\n'
                                                    f'{event.info_event}\n'
                                                    f'{event.start_time}\n'
-                                                   f'{event.user_create}')
+                                                   f'{event.user_create}\n'
+                                                   f'{event.id}',
+                                   reply_markup=create_kb_yes_or_no(2, 'Yes_reg_new_event', 'No_reg_new_event'
+                                                                    )
+                                   )
         await callback.message.edit_text(
             text=Lexicon_ru['/start'],
             reply_markup=keyboard_menu
         )
-        await event.asave()
+
         await state.clear()
         # ДОДЕЛАТЬ: возможность добавлять одно событие
 
@@ -147,18 +172,18 @@ async def save_info_in_db(callback: CallbackQuery, state: FSMContext, bot):
 
 # вывод календаря
 @router.callback_query(lambda f: f.data == 'calendar' or f.data == 'back_in_calendar')
-async def process_open_calendar(callback: CallbackQuery):
-    u = callback.from_user.id
-    p = await datebase.up_date_time_for_user(callback)
+async def process_open_calendar(callback: CallbackQuery, bot):
+    user = callback.from_user.id
+    profile = await datebase.up_date_time_for_user(callback)
     name_month = callback.message.date.month
     list_days = create_day(callback.message.date.year, callback.message.date.month)
-    events = await datebase.show_events_now_month(u,
-                                                  p.time_update.year,
-                                                  p.time_update.month,
-                                                  p.time_update.day
+    events = await datebase.show_events_now_month(user,
+                                                  profile.time_update.year,
+                                                  profile.time_update.month,
+                                                  profile.time_update.day
                                                   )
     await callback.message.edit_text(
-        text=f'<b>Календарь событий {p.choice_month.year}</b> ',
+        text=f'<b>Календарь событий {profile.choice_month.year}</b> ',
         reply_markup=create_calendar(3,
                                      events,
                                      list_days,
@@ -204,7 +229,8 @@ async def show_info_about_event(callback: CallbackQuery, callback_data: Callback
     await EventIsRead.objects.aget_or_create(profile=is_user, event=event_info)
     await callback.message.edit_text(text=f'{event_info.name_event}\n'
                                           f'{event_info.info_event}\n'
-                                          f'Начало: {event_info.start_time.strftime("%Y-%m-%d в %H:%M")}',
+                                          f'Начало: {event_info.start_time.strftime("%Y-%m-%d в %H:%M")}'
+                                          f'Ссылка: {event_info.url}',
                                      reply_markup=create_button_back_and_mani_menu(1,
                                                                                    'back_in_events',
                                                                                    'mani_menu'
@@ -224,9 +250,10 @@ async def process_next_month(callback: CallbackQuery):
         await m.asave(update_fields=['choice_month'])
     list_days = create_day(m.choice_month.year, m.choice_month.month)
     if m.choice_month.month != time_for_now_month.month:
-        events = await datebase.show_events_now_month(m, m.choice_month.year, m.choice_month.month, m.choice_month.day)
+        events = await datebase.show_events_now_month(m.external_id, m.choice_month.year, m.choice_month.month,
+                                                      m.choice_month.day)
     else:
-        events = await datebase.show_events_now_month(m, m.choice_month.year, m.choice_month.month,
+        events = await datebase.show_events_now_month(m.external_id, m.choice_month.year, m.choice_month.month,
                                                       time_for_now_month.day)
     await callback.message.edit_text(
         text=f'<b>Календарь событий {m.choice_month.year}</b> ',
