@@ -1,7 +1,6 @@
 import asyncio
 import logging
 
-
 from django.core.management import BaseCommand
 
 from aiogram.fsm.storage.redis import RedisStorage, Redis
@@ -17,7 +16,7 @@ logger = logging.getLogger(__name__)
 config: Config = load_config()
 
 # Инициализация Redis
-redis = Redis(host='localhost')
+redis = Redis(host='redis', port=6380)
 
 # Инициализация хранилища для FSM
 storage = RedisStorage(redis=redis)
@@ -44,5 +43,3 @@ class Command(BaseCommand):
 
 
 asyncio.run(Command.handle(config))
-
-

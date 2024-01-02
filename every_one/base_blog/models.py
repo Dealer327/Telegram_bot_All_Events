@@ -1,7 +1,4 @@
-from datetime import datetime
-
 from django.db import models
-from django.db.models import DateTimeField
 
 
 # Create your models here.
@@ -18,14 +15,10 @@ class Admin(models.Model):
 class Profile(models.Model):
     external_id = models.PositiveIntegerField(
         verbose_name='ID пользователя',
-        unique=True,
-    )
-    name = models.TextField(
-        verbose_name='Имя пользователя',
-    )
+        unique=True)
+    name = models.TextField(verbose_name='Имя пользователя')
     time_create = models.DateTimeField(auto_now_add=True,
-                                       verbose_name='Дата регистрации'
-                                       )
+                                       verbose_name='Дата регистрации')
     time_update = models.DateTimeField(auto_now=True)
 
     choice_month = models.DateTimeField(null=True)
@@ -43,11 +36,9 @@ class Event(models.Model):
                                   verbose_name='Эвент')
     info_event = models.CharField(max_length=700,
                                   verbose_name='Информация')
-
     user_create = models.ForeignKey(Profile,
                                     on_delete=models.CASCADE,
                                     null=True)
-
     start_time = models.DateTimeField(verbose_name='Время начала')
     create_time = models.DateTimeField(auto_now_add=True)
     publish = models.BooleanField(default=False,
