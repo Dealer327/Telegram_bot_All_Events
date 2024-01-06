@@ -2,7 +2,7 @@ from aiogram import Bot
 from aiogram.types import BotCommand, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from ..lexicon.lexicon_ru import LEXICON_COMMANDS, Lexicon_ru
+from base_blog.management.commands.lexicon.lexicon_ru import LEXICON_COMMANDS, Lexicon_ru
 
 
 async def set_main_menu(bot: Bot):
