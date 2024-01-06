@@ -8,13 +8,21 @@ from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup, default_state
 
-from ..services.file_handling import create_day, create_button_main_menu
-from ....models import *
-from ..keyboards.main_menu import create_inline_kb, create_button_back_and_mani_menu
-from ..keyboards.calendar_kb import create_calendar, create_kb_yes_or_no, create_kb_finish_add_event, \
-    create_list_events, CallbackFactoryForEvent
-from ..lexicon.lexicon_ru import Lexicon_ru, Lexicon_month, Lexicon_form_new_event
-from ..date_base import datebase
+from base_blog.management.commands.services.file_handling import (create_day,
+                                                                  create_button_main_menu)
+from base_blog.models import *
+from base_blog.management.commands.keyboards.main_menu import (create_inline_kb,
+                                                               create_button_back_and_mani_menu)
+from base_blog.management.commands.keyboards.calendar_kb import (create_calendar,
+                                                                 create_kb_yes_or_no,
+                                                                 create_kb_finish_add_event,
+                                                                 create_list_events,
+                                                                 )
+from base_blog.management.commands.filters.filters_callback import CallbackFactoryForEvent
+from base_blog.management.commands.lexicon.lexicon_ru import (Lexicon_ru,
+                                                              Lexicon_month,
+                                                              Lexicon_form_new_event)
+from base_blog.management.commands.date_base import datebase
 
 # Инициализируем роутер уровня модуля
 router: Router = Router()
@@ -28,19 +36,15 @@ class FormEvent(StatesGroup):
     url_event = State()
 
 
-class FormAddNewEvent(StatesGroup):
-    event_id = State()
-
-
+# Форма для выбранного дня в календаре
 class FormOpenEvents(StatesGroup):
     open_day = State()
 
 
+# начало пользование бота
 @router.message(CommandStart())
 async def process_start_command(message: Message):
-    await Profile.objects.aget_or_create(
-        external_id=message.from_user.id,
-        defaults={'name': message.from_user.username})
+    await datebase.create_new_user(message)
     all_not_read_events = await datebase.show_count_not_read_event_in_menu(message.from_user.id)
     keyboard_menu = create_inline_kb(1, all_not_read_events, 'calendar', 'new_event')
     await message.answer(
@@ -49,7 +53,7 @@ async def process_start_command(message: Message):
     )
 
 
-# Хендлер для срабатывания на нажатия кнопки добавить свое событие
+# Хендлер для срабатывания на нажатия кнопки "Добавить свое событие"
 @router.callback_query(F.data == 'new_event', StateFilter(default_state))
 async def create_new_event(callback: CallbackQuery, state: FSMContext):
     await state.set_state(FormEvent.start_time)
@@ -65,7 +69,6 @@ async def process_input_date(message: Message, state: FSMContext):
     await state.update_data(start_time=message.text)
     try:
         dt = datetime.strptime(message.text, '%Y-%m-%d %H:%M').date()
-
         if dt > datetime.now().date() + timedelta(days=90):
             await message.answer(text=f'{Lexicon_form_new_event["Error_date_three_month"]}',
                                  reply_markup=create_button_main_menu())
@@ -77,20 +80,19 @@ async def process_input_date(message: Message, state: FSMContext):
             await message.delete()
     except ValueError:
         await message.answer(text=f'{Lexicon_form_new_event["Error_date"]}',
-                             reply_markup=create_button_main_menu())
+                             reply_markup=create_button_main_menu()
+                             )
 
 
 # хендлер для заполнения названия эвента
 @router.message(StateFilter(FormEvent.name_even))
 async def process_input_name_event(message: Message, state: FSMContext):
     await state.update_data(name_event=message.text)
-
     await state.set_state(FormEvent.info_event)
     await message.answer(text=f"{Lexicon_form_new_event['Conf_name']} {message.text}")
     await message.answer(text=f'{Lexicon_form_new_event["Info_event"]}',
                          reply_markup=create_button_main_menu()
                          )
-
     await message.delete()
 
 
@@ -123,13 +125,13 @@ async def process_input_url_event(message: Message, state: FSMContext):
 # хендлер регистрации эвента и добавления его в бд
 @router.callback_query(F.data == 'Reg')
 async def save_info_in_db(callback: CallbackQuery, state: FSMContext, bot):
-    p = await Profile.objects.aget(name=callback.from_user.username)
-    keyboard_menu = create_inline_kb(1, None, 'calendar', 'new_event')
+    all_not_read_events = await datebase.show_count_not_read_event_in_menu(callback.from_user.id)
+    keyboard_menu = create_inline_kb(1, all_not_read_events, 'calendar', 'new_event')
     try:
         data = await state.get_data()
         event = Event(name_event=data['name_event'],
                       info_event=data['info_event'],
-                      user_create=p,
+                      user_create=await datebase.take_user_from_db(callback.from_user.username),
                       start_time=data['start_time'],
                       url=data['url_event'])
         await event.asave()
@@ -217,11 +219,11 @@ async def show_info_about_event(callback: CallbackQuery, callback_data: Callback
     is_user = await Profile.objects.aget(external_id=callback.from_user.id)
     event_info = await datebase.show_info_about_event(callback_data.id_event)
     await EventIsRead.objects.aget_or_create(profile=is_user, event=event_info)
-    await callback.message.edit_text(text=f'{event_info.name_event}\n\n'
+    await callback.message.edit_text(text=f'<b>{event_info.name_event}</b>\n\n'
+                                          f'{Lexicon_ru["about_event"]}: \n'
                                           f'{event_info.info_event}\n\n'
                                           f'Начало: {event_info.start_time.strftime("%Y-%m-%d в %H:%M")}\n'
-                                          f'Ссылка: {event_info.url}'
-                                     ,
+                                          f'Ссылка: {event_info.url}',
                                      reply_markup=create_button_back_and_mani_menu(1,
                                                                                    'back_in_events',
                                                                                    'mani_menu'
