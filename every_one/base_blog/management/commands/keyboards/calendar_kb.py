@@ -2,12 +2,14 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.filters.callback_data import CallbackData
 
-from ..lexicon.lexicon_ru import Lexicon_month, Lexicon_form_new_event, Lexicon_ru
+from base_blog.management.commands.lexicon.lexicon_ru import (Lexicon_month,
+                                                                        Lexicon_form_new_event,
+                                                                        Lexicon_ru)
+
+from base_blog.management.commands.filters.filters_callback import CallbackFactoryForEvent
 
 
 # Класс для создания callback-данных для инлайн-клавиатур
-class CallbackFactoryForEvent(CallbackData, prefix="Event", sep="_"):
-    id_event: int
 
 
 # Функция для создания инлайн-клавиатуры с кнопками "Да" или "Нет"
