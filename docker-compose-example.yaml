@@ -1,0 +1,40 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    environment:
+      POSTGRES_USER: Имя пользователя
+      POSTGRES_PASSWORD: пароль
+      POSTGRES_DB: Ваша бд
+    ports:
+      - "5432:5432"
+
+  web:
+    build:
+      context: ./every_one
+    container_name: admin_db
+    command:  python manage.py runserver 0.0.0.0:8000
+    ports:
+      - '8004:8000'
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      DB_NAME: "Ваша бд"
+      DB_USER: "Имя пользователя бд"
+      DB_PASSWORD: "пароль"
+      DB_HOST: "хост"
+      DB_PORT: 5432
+  bot:
+    build:
+      context: ./every_one
+    container_name: bot
+    command: python manage.py bot
+  redis:
+    image: redis:latest
+    command: --port 6380
+    ports:
+      - "6380:6380"
+    depends_on:
+      - postgres
