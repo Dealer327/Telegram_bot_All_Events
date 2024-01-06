@@ -10,8 +10,7 @@ Lexicon_ru: dict[str, str] = {'/start': '<b>Привет, друг!</b>✋\nЭт
                               'back_in_calendar': 'Назад',
                               'back_in_events': 'Назад',
                               'mani_menu': 'Главное меню',
-
-
+                              'about_event': 'Описание',
                               }
 Lexicon_form_new_event: dict[str, str] = {'Yes_date': '✅',
 
@@ -62,6 +61,7 @@ Lexicon_month: dict[int, str] = {1: 'Январь', 2: 'Февраль',
                                  'backward_c': '<<',
                                  }
 LEXICON_COMMANDS: dict[str, str] = {
-    'help': 'Справочник по работе бота'}
+    'help': 'Справочник по работе бота',
+    'start': 'Начало - начал'}
 
 Lexicon_day_with_event = '🔥'
