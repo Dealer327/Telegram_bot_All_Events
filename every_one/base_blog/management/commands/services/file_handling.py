@@ -1,8 +1,7 @@
 from calendar import monthrange
 from datetime import datetime
 
-from ..keyboards.main_menu import create_inline_kb
-from ....models import *
+from base_blog.management.commands.keyboards.main_menu import create_inline_kb
 
 
 def create_day(year: datetime.year, month: datetime.month):
