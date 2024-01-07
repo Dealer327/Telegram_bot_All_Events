@@ -10,5 +10,10 @@
 </h3>
 1 - git clone https://github.com/Dealer327/Every_one.git (клонируем репозиторий)<br>
 2 - открыть фаил docker-compose-example.yaml заменить его на docker-compose.yaml и вставить свои значения в поля для бд.<br>
+3 - открыть фаил bot.py находиться в base_blog -> management -> commands. Найти переменую redis и указать хост и порт(для работы в контенере, локально оставить пустым значения)<br>
+4 - для запуска локально необходимо усатновить зависимости в фаиле requirements.txt указаны все зависимости(команда py manage.py runserver запускает админку(не забываем миграции накатить 'migrate'))<br>
+запуск бота не забываем вставить свой ключ в env фаил команда для запуска py manage.py bot
+5 - для запуска в контенере просто вводим в терминал команду docker-compose up 
+6 - после создаем суперюзера для админки docker compose run web python manage.py createsuperuser
 
 
