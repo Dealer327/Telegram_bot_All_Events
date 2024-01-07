@@ -8,7 +8,7 @@
 <h3>
   Инструкция по запуску локально:
 </h3>
-1 - git clone https://github.com/Dealer327/Every_one.git (клонируем репозиторий)
-2 - открыть фаил docker
+1 - git clone https://github.com/Dealer327/Every_one.git (клонируем репозиторий)<br>
+2 - открыть фаил docker-compose-example.yaml заменить его на docker-compose.yaml и вставить свои значения в поля для бд.<br>
 
 
