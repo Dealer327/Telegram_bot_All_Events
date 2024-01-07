@@ -14,7 +14,8 @@ services:
     build:
       context: ./every_one
     container_name: admin_db
-    command:  python manage.py runserver 0.0.0.0:8000
+    command:  bash -c "python manage.py migrate && 
+              python manage.py runserver 0.0.0.0:8000"
     ports:
       - '8004:8000'
     depends_on:
