@@ -50,12 +50,13 @@ def create_inline_kb(width: int,
     return kb_builder.as_markup()
 
 
-def create_button_back_and_mani_menu(width: int, *args) -> InlineKeyboardMarkup:
+def create_button_back_and_mani_menu(width: int, url: str, *args) -> InlineKeyboardMarkup:
     # Инициализируем билдер
     kb_builder = InlineKeyboardBuilder()
     # Инициализируем список для кнопок
     buttons: list[InlineKeyboardButton] = []
-
+    url_btn = InlineKeyboardButton(text='Сюда', url=url)
+    buttons.append(url_btn)
     if args:
         for button in args:
             buttons.append(InlineKeyboardButton(
