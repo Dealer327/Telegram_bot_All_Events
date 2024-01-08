@@ -23,10 +23,14 @@ async def process_add_id_event(callback: CallbackQuery):
             await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
             # Берем этот эвент и пересылаем его в канал телеграма
             event = await datebase.process_posting_event_in_chanel(id_event)
-            await bot.send_message(chat_id=-1002007237265, text=f'<b>{event.name_event}</b>\n\n'
-                                                                f'{Lexicon_ru["about_event"]}\n'
-                                                                f'{event.info_event}\n'
-                                                                f'{event.start_time.strftime("%Y-%m-%d в %H:%M")}')
+            msg_id = await bot.send_message(chat_id=-1002007237265,
+                                            text=f'<b>{event.name_event}</b>\n\n'
+                                                 f'<b>{Lexicon_ru["about_event"]}</b>\n'
+                                                 f'{event.info_event}\n'
+                                                 f'<b>Начало:</b> '
+                                                 f'{event.start_time.strftime("%Y-%m-%d в %H:%M")}\n'
+                                                 f'Ссылка: {event.url}')
+            await datebase.url_in_chanel_for_events(id_event, msg_id.message_id)
             # Цикл для отправки уведомление всем пользователям, что появилось новое событие в чат боте
             send_msg_users = await datebase.all_users()
             for user in send_msg_users:
