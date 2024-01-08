@@ -126,3 +126,9 @@ async def all_users():
 async def process_posting_event_in_chanel(id_event):
     event = await Event.objects.aget(id=id_event)
     return event
+
+
+async def url_in_chanel_for_events(id_event: int, id_event_in_chanel: int):
+    event = await Event.objects.aget(id=id_event)
+    event.chanel = id_event_in_chanel
+    await event.asave(update_fields=['chanel'])
