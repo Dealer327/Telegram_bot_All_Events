@@ -112,11 +112,11 @@ async def process_input_info_event(message: Message, state: FSMContext):
 async def process_input_url_event(message: Message, state: FSMContext):
     await state.update_data(url_event=message.text)
     data = await state.get_data()
-    await message.answer(text=f'{Lexicon_form_new_event["Conf_info"]} '
-                              f'{data["name_event"]} '
-                              f'{data["info_event"]} '
-                              f'{data["start_time"]}'
-                              f'{data["url_event"]}',
+    await message.answer(text=f'<b>{Lexicon_form_new_event["Conf_info"]}</b>\n '
+                              f'{data["name_event"]} \n'
+                              f'{data["info_event"]} \n'
+                              f'Начало: {data["start_time"]}\n'
+                              f'Ссылка: {data["url_event"]}',
                          reply_markup=create_kb_finish_add_event(2, 'Reg', 'Cen')
                          )
     await message.delete()
@@ -225,6 +225,7 @@ async def show_info_about_event(callback: CallbackQuery, callback_data: Callback
                                           f'Начало: {event_info.start_time.strftime("%Y-%m-%d в %H:%M")}\n'
                                           f'Ссылка: {event_info.url}',
                                      reply_markup=create_button_back_and_mani_menu(1,
+                                                                                   f'https://t.me/penzaevent/{str(event_info.chanel)}',
                                                                                    'back_in_events',
                                                                                    'mani_menu'
                                                                                    ))
