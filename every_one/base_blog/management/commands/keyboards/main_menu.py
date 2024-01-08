@@ -5,6 +5,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from base_blog.management.commands.lexicon.lexicon_ru import LEXICON_COMMANDS, Lexicon_ru
 
 
+# ест
 async def set_main_menu(bot: Bot):
     main_menu_commands = [BotCommand(
         command=command,
@@ -38,6 +39,8 @@ def create_inline_kb(width: int,
                 buttons.append(InlineKeyboardButton(
                     text=f'{Lexicon_ru[button]}' if button in Lexicon_ru else button,
                     callback_data=button))
+        url_btn = InlineKeyboardButton(text='Чат', url='https://t.me/PenzaEventChat')
+        buttons.append(url_btn)
     # Распаковываем список с кнопками в билдер методом row c параметром width
     kb_builder.row(*buttons, width=width)
     if last_btn:
@@ -55,7 +58,7 @@ def create_button_back_and_mani_menu(width: int, url: str, *args) -> InlineKeybo
     kb_builder = InlineKeyboardBuilder()
     # Инициализируем список для кнопок
     buttons: list[InlineKeyboardButton] = []
-    url_btn = InlineKeyboardButton(text='Сюда', url=url)
+    url_btn = InlineKeyboardButton(text='Перейти к обсуждению', url=url)
     buttons.append(url_btn)
     if args:
         for button in args:

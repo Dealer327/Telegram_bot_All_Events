@@ -59,7 +59,7 @@ async def create_new_event(callback: CallbackQuery, state: FSMContext):
     await state.set_state(FormEvent.start_time)
     await callback.message.edit_text(
         text=f'{Lexicon_form_new_event["Date_event"]}',
-        reply_markup=create_button_main_menu())
+        reply_markup=create_inline_kb(1, last_btn='Главное меню'))
     await callback.answer()
 
 
