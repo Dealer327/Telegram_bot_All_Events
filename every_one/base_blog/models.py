@@ -46,6 +46,7 @@ class Event(models.Model):
     url = models.CharField(max_length=200,
                            verbose_name='Ссылка',
                            blank=True)
+    chanel = models.CharField(verbose_name='id_евента_в_канале')
 
     class Meta:
         verbose_name = 'Эвент'
