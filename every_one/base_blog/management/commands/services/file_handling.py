@@ -12,6 +12,3 @@ def create_day(year: datetime.year, month: datetime.month):
     return ready_days_in_month
 
 
-def create_button_main_menu():
-    keyboard_menu = create_inline_kb(1, last_btn='Главное меню')
-    return keyboard_menu

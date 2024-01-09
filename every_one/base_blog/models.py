@@ -34,7 +34,7 @@ class Profile(models.Model):
 class Event(models.Model):
     name_event = models.CharField(max_length=60,
                                   verbose_name='Эвент')
-    info_event = models.CharField(max_length=700,
+    info_event = models.CharField(max_length=1500,
                                   verbose_name='Информация')
     user_create = models.ForeignKey(Profile,
                                     on_delete=models.CASCADE,

@@ -4,12 +4,11 @@ from aiogram.types import Message, CallbackQuery
 from dateutil.relativedelta import relativedelta
 
 from aiogram.filters import CommandStart, StateFilter
-from aiogram import Router, F
+from aiogram import Router, F, Bot
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup, default_state
 
-from base_blog.management.commands.services.file_handling import (create_day,
-                                                                  create_button_main_menu)
+from base_blog.management.commands.services.file_handling import create_day
 from base_blog.models import *
 from base_blog.management.commands.keyboards.main_menu import (create_inline_kb,
                                                                create_button_back_and_mani_menu)
@@ -76,7 +75,7 @@ async def process_input_date(message: Message, state: FSMContext):
             await state.set_state(FormEvent.name_even)
             await message.answer(text=f"{Lexicon_form_new_event['Conf_date']} {message.text}")
             await message.answer(text=f'{Lexicon_form_new_event["Hi_event"]}',
-                                 reply_markup=create_button_main_menu())
+                                 reply_markup=create_inline_kb(1, last_btn='Главное меню'))
             await message.delete()
     except ValueError:
         await message.answer(text=f'{Lexicon_form_new_event["Error_date"]}',
@@ -91,7 +90,7 @@ async def process_input_name_event(message: Message, state: FSMContext):
     await state.set_state(FormEvent.info_event)
     await message.answer(text=f"{Lexicon_form_new_event['Conf_name']} {message.text}")
     await message.answer(text=f'{Lexicon_form_new_event["Info_event"]}',
-                         reply_markup=create_button_main_menu()
+                         reply_markup=create_inline_kb(1, last_btn='Главное меню')
                          )
     await message.delete()
 
@@ -103,7 +102,7 @@ async def process_input_info_event(message: Message, state: FSMContext):
     await state.set_state(FormEvent.url_event)
     await message.answer(text=f"{Lexicon_form_new_event['Info_event']} {message.text}")
     await message.answer(text=f'{Lexicon_form_new_event["url_event"]}',
-                         reply_markup=create_button_main_menu()
+                         reply_markup=create_inline_kb(1, last_btn='Главное меню')
                          )
     await message.delete()
 
@@ -220,7 +219,7 @@ async def show_info_about_event(callback: CallbackQuery, callback_data: Callback
     event_info = await datebase.show_info_about_event(callback_data.id_event)
     await EventIsRead.objects.aget_or_create(profile=is_user, event=event_info)
     await callback.message.edit_text(text=f'<b>{event_info.name_event}</b>\n\n'
-                                          f'{Lexicon_ru["about_event"]}: \n'
+                                          f'{Lexicon_ru["about_event"]} \n'
                                           f'{event_info.info_event}\n\n'
                                           f'Начало: {event_info.start_time.strftime("%Y-%m-%d в %H:%M")}\n'
                                           f'Ссылка: {event_info.url}',
