@@ -19,7 +19,7 @@ config: Config = load_config()
 
 # Инициализация Redis
 redis = Redis(host='redis', port=6380)
-#
+# host='redis', port=6380
 # Инициализация хранилища для FSM
 storage = RedisStorage(redis=redis)
 
