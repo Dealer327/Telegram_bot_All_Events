@@ -1,6 +1,7 @@
 import asyncio
 import logging
 
+from django.contrib.auth import get_user_model
 from django.core.management import BaseCommand
 
 from aiogram.fsm.storage.redis import RedisStorage, Redis
@@ -44,4 +45,10 @@ class Command(BaseCommand):
         await dp.start_polling(bot)
 
 
+username = 'root'
+password = 'root'
+
+user = get_user_model().objects.filter(username=username).first()
+if not user:
+    get_user_model().objects.create_superuser(username=username, password=password, email='empty.battle@yandex.ru')
 asyncio.run(Command.handle(config))
