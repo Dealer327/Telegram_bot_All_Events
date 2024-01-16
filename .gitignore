@@ -4,4 +4,5 @@ venv
 __pycache__
 *.py[com]
 .env
-
+.env.docker
+docker-compose.yaml
