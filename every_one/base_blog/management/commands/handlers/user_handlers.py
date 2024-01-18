@@ -70,7 +70,7 @@ async def process_input_date(message: Message, state: FSMContext):
         dt = datetime.strptime(message.text, '%Y-%m-%d %H:%M').date()
         if dt > datetime.now().date() + timedelta(days=90):
             await message.answer(text=f'{Lexicon_form_new_event["Error_date_three_month"]}',
-                                 reply_markup=create_button_main_menu())
+                                 reply_markup=create_inline_kb(1, last_btn='Главное меню'))
         else:
             await state.set_state(FormEvent.name_even)
             await message.answer(text=f"{Lexicon_form_new_event['Conf_date']} {message.text}")
@@ -79,7 +79,7 @@ async def process_input_date(message: Message, state: FSMContext):
             await message.delete()
     except ValueError:
         await message.answer(text=f'{Lexicon_form_new_event["Error_date"]}',
-                             reply_markup=create_button_main_menu()
+                             reply_markup=create_inline_kb(1, last_btn='Главное меню')
                              )
 
 
