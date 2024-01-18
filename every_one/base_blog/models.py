@@ -43,7 +43,7 @@ class Event(models.Model):
     create_time = models.DateTimeField(auto_now_add=True)
     publish = models.BooleanField(default=False,
                                   verbose_name='Опубликовано')
-    url = models.CharField(max_length=200,
+    url = models.CharField(max_length=800,
                            verbose_name='Ссылка',
                            blank=True)
     chanel = models.CharField(verbose_name='id_евента_в_канале')
